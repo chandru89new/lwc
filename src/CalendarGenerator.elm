@@ -8,6 +8,10 @@ import List.Extra
 import Time
 
 
+type alias PublicHoliday =
+    Date.Date
+
+
 type Msg
     = ClickedDate (Maybe Date.Date)
 
@@ -89,8 +93,8 @@ generateMonthList month year startOfWeek =
     result
 
 
-viewMonth : (Msg -> msg) -> Time.Month -> Int -> Time.Weekday -> H.Html msg
-viewMonth toMsg month year startOfWeek =
+viewMonth : (Msg -> msg) -> List PublicHoliday -> List HighlightDate -> Time.Month -> Time.Weekday -> Int -> H.Html msg
+viewMonth toMsg phs lws month startOfWeek year =
     let
         listOfWeeks =
             generateMonthList month year startOfWeek
@@ -103,22 +107,25 @@ viewMonth toMsg month year startOfWeek =
             ([ viewMonthHeader month year
              , viewWeekHeader
              ]
-                ++ List.map viewWeek listOfWeeks
+                ++ List.map (viewWeek phs lws) listOfWeeks
             )
         )
 
 
-viewWeek : List (Maybe Date.Date) -> H.Html Msg
-viewWeek week =
+viewWeek : List PublicHoliday -> List HighlightDate -> List (Maybe Date.Date) -> H.Html Msg
+viewWeek phs lws week =
     H.div []
         (List.map
-            viewDate
+            (viewDate
+                phs
+                lws
+            )
             week
         )
 
 
-viewDate : Maybe Date.Date -> H.Html Msg
-viewDate maybeDate =
+viewDate : List PublicHoliday -> List HighlightDate -> Maybe Date.Date -> H.Html Msg
+viewDate phs lwds maybeDate =
     let
         dateAsString =
             case maybeDate of
@@ -127,9 +134,34 @@ viewDate maybeDate =
 
                 Just d ->
                     String.fromInt <| Date.day d
+
+        isPh =
+            Maybe.withDefault False (Maybe.map (\date -> List.any ((==) date) phs) maybeDate)
+
+        isLwDate =
+            Maybe.withDefault False <| Maybe.map (\date -> List.any ((==) date) lwds) maybeDate
     in
     H.span
-        (dateBoxStyle ++ [ Ev.onClick (ClickedDate maybeDate) ])
+        (dateBoxStyle
+            ++ [ Attr.class "date"
+               , Attr.class
+                    (if isLwDate then
+                        "text-green-500"
+
+                     else
+                        ""
+                    )
+               , Attr.class
+                    (if isPh then
+                        "text-red-600"
+
+                     else
+                        ""
+                    )
+               , Ev.onClick
+                    (ClickedDate maybeDate)
+               ]
+        )
         [ H.text dateAsString ]
 
 
@@ -170,7 +202,7 @@ viewWeekHeader =
     H.div weekDivStyle
         (List.map
             toSpan
-            [ Time.Mon, Time.Tue, Time.Wed, Time.Thu, Time.Fri, Time.Sat, Time.Sun ]
+            [ Time.Sun, Time.Mon, Time.Tue, Time.Wed, Time.Thu, Time.Fri, Time.Sat ]
         )
 
 
@@ -236,3 +268,7 @@ monthToString month =
 
 type alias Year =
     Int
+
+
+type alias HighlightDate =
+    Date.Date

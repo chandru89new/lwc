@@ -5550,7 +5550,7 @@ var $author$project$Main$init = function (_v0) {
 				]),
 			$author$project$CalendarDays$weekends_,
 			_List_Nil,
-			3),
+			1),
 		A2(
 			$elm$core$Task$perform,
 			function (_v1) {
@@ -5866,10 +5866,21 @@ var $author$project$Main$update = F2(
 				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		}
 	});
+var $elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
+		} else {
+			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
+		}
+	});
+var $elm$core$List$concat = function (lists) {
+	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
+};
+var $elm$html$Html$div = _VirtualDom_node('div');
 var $author$project$Main$CMsg = function (a) {
 	return {$: 'CMsg', a: a};
 };
-var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
@@ -5879,6 +5890,8 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 			$elm$json$Json$Encode$string(string));
 	});
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
+var $author$project$Main$months = _List_fromArray(
+	[$elm$time$Time$Jan, $elm$time$Time$Feb, $elm$time$Time$Mar, $elm$time$Time$Apr, $elm$time$Time$May, $elm$time$Time$Jun, $elm$time$Time$Jul, $elm$time$Time$Aug, $elm$time$Time$Sep, $elm$time$Time$Oct, $elm$time$Time$Nov, $elm$time$Time$Dec]);
 var $justinmimbs$date$Date$Day = {$: 'Day'};
 var $justinmimbs$date$Date$weekdayToNumber = function (wd) {
 	switch (wd.$) {
@@ -6385,6 +6398,16 @@ var $justinmimbs$date$Date$day = A2(
 	function ($) {
 		return $.day;
 	});
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -6403,36 +6426,70 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		$elm$json$Json$Decode$succeed(msg));
 };
 var $elm$html$Html$span = _VirtualDom_node('span');
-var $author$project$CalendarGenerator$viewDate = function (maybeDate) {
-	var dateAsString = function () {
-		if (maybeDate.$ === 'Nothing') {
-			return '-';
-		} else {
-			var d = maybeDate.a;
-			return $elm$core$String$fromInt(
-				$justinmimbs$date$Date$day(d));
-		}
-	}();
-	return A2(
-		$elm$html$Html$span,
-		_Utils_ap(
-			$author$project$CalendarGenerator$dateBoxStyle,
+var $author$project$CalendarGenerator$viewDate = F3(
+	function (phs, lwds, maybeDate) {
+		var isPh = A2(
+			$elm$core$Maybe$withDefault,
+			false,
+			A2(
+				$elm$core$Maybe$map,
+				function (date) {
+					return A2(
+						$elm$core$List$any,
+						$elm$core$Basics$eq(date),
+						phs);
+				},
+				maybeDate));
+		var isLwDate = A2(
+			$elm$core$Maybe$withDefault,
+			false,
+			A2(
+				$elm$core$Maybe$map,
+				function (date) {
+					return A2(
+						$elm$core$List$any,
+						$elm$core$Basics$eq(date),
+						lwds);
+				},
+				maybeDate));
+		var dateAsString = function () {
+			if (maybeDate.$ === 'Nothing') {
+				return '-';
+			} else {
+				var d = maybeDate.a;
+				return $elm$core$String$fromInt(
+					$justinmimbs$date$Date$day(d));
+			}
+		}();
+		return A2(
+			$elm$html$Html$span,
+			_Utils_ap(
+				$author$project$CalendarGenerator$dateBoxStyle,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('date'),
+						$elm$html$Html$Attributes$class(
+						isLwDate ? 'text-green-500' : ''),
+						$elm$html$Html$Attributes$class(
+						isPh ? 'text-red-600' : ''),
+						$elm$html$Html$Events$onClick(
+						$author$project$CalendarGenerator$ClickedDate(maybeDate))
+					])),
 			_List_fromArray(
 				[
-					$elm$html$Html$Events$onClick(
-					$author$project$CalendarGenerator$ClickedDate(maybeDate))
-				])),
-		_List_fromArray(
-			[
-				$elm$html$Html$text(dateAsString)
-			]));
-};
-var $author$project$CalendarGenerator$viewWeek = function (week) {
-	return A2(
-		$elm$html$Html$div,
-		_List_Nil,
-		A2($elm$core$List$map, $author$project$CalendarGenerator$viewDate, week));
-};
+					$elm$html$Html$text(dateAsString)
+				]));
+	});
+var $author$project$CalendarGenerator$viewWeek = F3(
+	function (phs, lws, week) {
+		return A2(
+			$elm$html$Html$div,
+			_List_Nil,
+			A2(
+				$elm$core$List$map,
+				A2($author$project$CalendarGenerator$viewDate, phs, lws),
+				week));
+	});
 var $author$project$CalendarGenerator$weekDivStyle = _List_fromArray(
 	[
 		$elm$html$Html$Attributes$class('week')
@@ -6477,10 +6534,10 @@ var $author$project$CalendarGenerator$viewWeekHeader = function () {
 			$elm$core$List$map,
 			toSpan,
 			_List_fromArray(
-				[$elm$time$Time$Mon, $elm$time$Time$Tue, $elm$time$Time$Wed, $elm$time$Time$Thu, $elm$time$Time$Fri, $elm$time$Time$Sat, $elm$time$Time$Sun])));
+				[$elm$time$Time$Sun, $elm$time$Time$Mon, $elm$time$Time$Tue, $elm$time$Time$Wed, $elm$time$Time$Thu, $elm$time$Time$Fri, $elm$time$Time$Sat])));
 }();
-var $author$project$CalendarGenerator$viewMonth = F4(
-	function (toMsg, month, year, startOfWeek) {
+var $author$project$CalendarGenerator$viewMonth = F6(
+	function (toMsg, phs, lws, month, startOfWeek, year) {
 		var listOfWeeks = A3($author$project$CalendarGenerator$generateMonthList, month, year, startOfWeek);
 		return A2(
 			$elm$html$Html$map,
@@ -6498,7 +6555,25 @@ var $author$project$CalendarGenerator$viewMonth = F4(
 							A2($author$project$CalendarGenerator$viewMonthHeader, month, year),
 							$author$project$CalendarGenerator$viewWeekHeader
 						]),
-					A2($elm$core$List$map, $author$project$CalendarGenerator$viewWeek, listOfWeeks))));
+					A2(
+						$elm$core$List$map,
+						A2($author$project$CalendarGenerator$viewWeek, phs, lws),
+						listOfWeeks))));
+	});
+var $author$project$Main$viewYear = F3(
+	function (year, phs, lws) {
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('grid')
+				]),
+			A2(
+				$elm$core$List$map,
+				function (month) {
+					return A6($author$project$CalendarGenerator$viewMonth, $author$project$Main$CMsg, phs, lws, month, $elm$time$Time$Sun, year);
+				},
+				$author$project$Main$months));
 	});
 var $author$project$Main$view = function (model) {
 	return A2(
@@ -6506,7 +6581,16 @@ var $author$project$Main$view = function (model) {
 		_List_Nil,
 		_List_fromArray(
 			[
-				A4($author$project$CalendarGenerator$viewMonth, $author$project$Main$CMsg, $elm$time$Time$Apr, 2021, $elm$time$Time$Sun)
+				A3(
+				$author$project$Main$viewYear,
+				2021,
+				model.publicHolidays,
+				A2(
+					$elm$core$List$map,
+					function ($) {
+						return $.date;
+					},
+					$elm$core$List$concat(model.longWeekends)))
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$element(

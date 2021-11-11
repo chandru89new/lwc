@@ -5,6 +5,7 @@ import CalendarDays as CD
 import CalendarGenerator as C
 import Date
 import Html as H
+import Html.Attributes as Attr
 import Task
 import Time
 
@@ -50,7 +51,7 @@ init _ =
         ]
         CD.weekends_
         []
-        3
+        1
     , Task.perform (\_ -> GenerateLongWeekends) (Task.succeed 1)
     )
 
@@ -85,11 +86,7 @@ update msg model =
 view : Model -> H.Html Msg
 view model =
     H.div []
-        [ C.viewMonth
-            CMsg
-            Time.Apr
-            2021
-            Time.Sun
+        [ viewYear 2021 model.publicHolidays (List.concat model.longWeekends |> List.map .date)
         ]
 
 
@@ -108,3 +105,30 @@ toString a =
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.none
+
+
+viewYear : Int -> List C.PublicHoliday -> List C.HighlightDate -> H.Html Msg
+viewYear year phs lws =
+    H.div
+        [ Attr.class "grid"
+        ]
+        (List.map
+            (\month -> C.viewMonth CMsg phs lws month Time.Sun year)
+            months
+        )
+
+
+months =
+    [ Time.Jan
+    , Time.Feb
+    , Time.Mar
+    , Time.Apr
+    , Time.May
+    , Time.Jun
+    , Time.Jul
+    , Time.Aug
+    , Time.Sep
+    , Time.Oct
+    , Time.Nov
+    , Time.Dec
+    ]

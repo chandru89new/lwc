@@ -1,5 +1,6 @@
 module CalendarDays exposing (..)
 
+import CalendarGenerator exposing (Msg)
 import Date as Date
 import List.Extra
 import Time
