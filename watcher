@@ -1,0 +1,16 @@
+#!/bin/bash
+
+### Set initial time of file
+LTIME=`stat src/*`
+
+while true    
+do
+   ATIME=`stat src/*` 
+   if [[ "$ATIME" != "$LTIME" ]]
+   then    
+       elm make src/Main.elm --output main.js
+       LTIME=$ATIME
+   fi
+   sleep 3 
+done
+

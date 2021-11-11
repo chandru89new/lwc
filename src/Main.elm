@@ -2,6 +2,7 @@ module Main exposing (..)
 
 import Browser
 import CalendarDays as CD
+import CalendarGenerator as C
 import Date
 import Html as H
 import Task
@@ -57,6 +58,7 @@ init _ =
 type Msg
     = NoOp
     | GenerateLongWeekends
+    | CMsg C.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -72,24 +74,30 @@ update msg model =
             in
             ( { model | longWeekends = longWeekendsList }, Cmd.none )
 
+        CMsg cmsg ->
+            let
+                _ =
+                    Debug.log "cmsg" cmsg
+            in
+            ( model, Cmd.none )
+
 
 view : Model -> H.Html Msg
 view model =
-    let
-        _ =
-            Debug.log "lw" model.longWeekends
-    in
     H.div []
-        (List.map
-            viewPotentialWeekend
-            model.longWeekends
-        )
+        [ C.viewMonth
+            CMsg
+            Time.Apr
+            2021
+            Time.Sun
+        ]
 
 
 viewPotentialWeekend : List CD.CalendarDate -> H.Html Msg
 viewPotentialWeekend list =
     H.div []
-        [ H.text <| String.join ", " (List.map toString list) ]
+        [ H.text <| String.join ", " (List.map toString list)
+        ]
 
 
 toString : CD.CalendarDate -> String
