@@ -5,13 +5,6 @@ import List.Extra
 import Time
 
 
-publicHolidays =
-    [ Date.fromCalendarDate 2021 Time.Nov 15
-    , Date.fromCalendarDate 2021 Time.Nov 1
-    , Date.fromCalendarDate 2021 Time.Nov 1
-    ]
-
-
 type alias CalendarDate =
     { date : Date.Date
     , isHoliday : Bool
@@ -44,10 +37,6 @@ generateCalendarDays start end holidays weekendDays result =
         generateCalendarDays startPlusOneDay end holidays weekendDays newResult
 
 
-calendarDaysIn2021 =
-    generateCalendarDays (Date.fromCalendarDate 2021 Time.Jan 1) (Date.fromCalendarDate 2022 Time.Jan 1) publicHolidays [ Time.Sat, Time.Sun ] []
-
-
 minusOneDay : Date.Date -> Date.Date
 minusOneDay =
     Date.add Date.Days -1
@@ -75,8 +64,8 @@ isHoliday calendarDates date =
             d.isHoliday || d.isWeekend
 
 
-traverseBackwards : List CalendarDate -> List Time.Weekday -> Date.Date -> Int -> List CalendarDate
-traverseBackwards calendarDates weekends fromDate days =
+traverseBackwards : List CalendarDate -> List Date.Date -> List Time.Weekday -> Date.Date -> Int -> List CalendarDate
+traverseBackwards calendarDates publicHolidays weekends fromDate days =
     let
         recTraverseBack : List CalendarDate -> Date.Date -> Int -> List CalendarDate
         recTraverseBack result pointDate days_ =
@@ -107,8 +96,8 @@ traverseBackwards calendarDates weekends fromDate days =
     recTraverseBack [] fromDate days
 
 
-traverseForwards : List CalendarDate -> List Time.Weekday -> Date.Date -> Int -> List CalendarDate
-traverseForwards calendarDates weekends fromDate days =
+traverseForwards : List CalendarDate -> List Date.Date -> List Time.Weekday -> Date.Date -> Int -> List CalendarDate
+traverseForwards calendarDates publicHolidays weekends fromDate days =
     let
         recTraverseForward : List CalendarDate -> Date.Date -> Int -> List CalendarDate
         recTraverseForward result pointDate days_ =
@@ -139,13 +128,13 @@ traverseForwards calendarDates weekends fromDate days =
     recTraverseForward [] fromDate days
 
 
-getLeaveRangesFromDate : List CalendarDate -> List Time.Weekday -> Date.Date -> Int -> List (List CalendarDate)
-getLeaveRangesFromDate calendarDates weekend_ date int =
+getLeaveRangesFromDate : List CalendarDate -> List Date.Date -> List Time.Weekday -> Date.Date -> Int -> List (List CalendarDate)
+getLeaveRangesFromDate calendarDates publicHolidays weekend_ date int =
     let
         sortedUnique : ( Int, Int ) -> List CalendarDate
         sortedUnique ( b, f ) =
-            traverseBackwards calendarDates weekend_ date b
-                ++ traverseForwards calendarDates weekend_ date f
+            traverseBackwards calendarDates publicHolidays weekend_ date b
+                ++ traverseForwards calendarDates publicHolidays weekend_ date f
                 |> List.Extra.unique
                 |> List.sortWith (\a b_ -> Date.compare a.date b_.date)
 
@@ -158,59 +147,6 @@ getLeaveRangesFromDate calendarDates weekend_ date int =
                 result ++ (sortedUnique ( backwards, forwards ) :: recGetLeaveRangeFromDate result date_ ( backwards - 1, forwards + 1 ))
     in
     recGetLeaveRangeFromDate [] date ( int, 0 )
-
-
-log dateInNov int =
-    traverseBackwards calendarDaysIn2021 weekends_ (Date.fromCalendarDate 2021 Time.Nov dateInNov) int
-
-
-log2 dateInNov int =
-    traverseForwards calendarDaysIn2021 weekends_ (Date.fromCalendarDate 2021 Time.Nov dateInNov) int
-
-
-mapToStrings =
-    List.map (\d -> Date.toIsoString d.date)
-
-
-runTests _ =
-    let
-        -- mapToStrings =
-        --     List.map (\d -> Date.toIsoString d.date)
-        test1 =
-            (log 10 0 |> mapToStrings) == [ "2021-11-10" ]
-
-        test2 =
-            (log 10 1 |> mapToStrings) == [ "2021-11-10", "2021-11-09" ]
-
-        test3 =
-            (log 10 2 |> mapToStrings) == [ "2021-11-10", "2021-11-09", "2021-11-08", "2021-11-07", "2021-11-06" ]
-
-        test4 =
-            (log 12 3 |> mapToStrings) == [ "2021-11-12", "2021-11-11", "2021-11-10", "2021-11-09" ]
-
-        test5 =
-            (log2 12 0 |> mapToStrings) == [ "2021-11-12", "2021-11-13", "2021-11-14" ]
-
-        test6 =
-            (log2 11 0 |> mapToStrings) == [ "2021-11-11", "2021-11-12", "2021-11-13", "2021-11-14" ]
-
-        test7 =
-            (log2 11 1 |> mapToStrings) == [ "2021-11-11", "2021-11-12", "2021-11-13", "2021-11-14", "2021-11-15" ]
-
-        test8 =
-            (log2 12 1 |> mapToStrings) == [ "2021-11-12", "2021-11-13", "2021-11-14", "2021-11-15" ]
-    in
-    List.foldl (&&) True [ test1, test2, test3, test4, test5, test6, test7, test8 ]
-
-
-test =
-    getLeaveRangesFromDate calendarDaysIn2021 weekends_ (Date.fromCalendarDate 2021 Time.Nov 10) 2
-
-
-
--- filterMaxLength : List (List CalendarDate) -> List CalendarDate
--- filterMaxLength list =
---     List.map getItemWithMaxLength list
 
 
 getItemWithMaxLength : List (List a) -> List a

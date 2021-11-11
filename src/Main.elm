@@ -68,7 +68,7 @@ update msg model =
         GenerateLongWeekends ->
             let
                 longWeekendsList =
-                    List.map (\date -> CD.getLeaveRangesFromDate model.calendarDays model.weekendDays date model.numberOfForcedLeaves |> CD.getItemWithMaxLength) model.publicHolidays
+                    List.map (\date -> CD.getLeaveRangesFromDate model.calendarDays model.publicHolidays model.weekendDays date model.numberOfForcedLeaves |> CD.getItemWithMaxLength) model.publicHolidays
             in
             ( { model | longWeekends = longWeekendsList }, Cmd.none )
 
