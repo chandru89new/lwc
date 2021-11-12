@@ -15,5 +15,7 @@ Shows a list of possible long-weekends based on some params.
 
 The watcher will automatically compile your changes and the live server will refresh the browser serving the `index.html` file.
 
+If you want to build the project, use the `build` file. (again, chmod +x the `build` file and then run it in terminal)
+
 
 
