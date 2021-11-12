@@ -5899,6 +5899,101 @@ var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
+var $elm$html$Html$span = _VirtualDom_node('span');
+var $author$project$Main$viewLegend = A2(
+	$elm$html$Html$div,
+	_List_Nil,
+	_List_fromArray(
+		[
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('text-sm mb-3')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Legend')
+				])),
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('flex items-center')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$span,
+					_Utils_ap(
+						A2(
+							$elm$core$List$map,
+							function (_v0) {
+								var a = _v0.a;
+								var b = _v0.b;
+								return A2($elm$html$Html$Attributes$style, a, b);
+							},
+							_List_fromArray(
+								[
+									_Utils_Tuple2('width', '16px'),
+									_Utils_Tuple2('height', '16px')
+								])),
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('bg-green-100 inline-block')
+							])),
+					_List_Nil),
+					A2(
+					$elm$html$Html$span,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('ml-2 text-xs')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Potential long leave')
+						]))
+				])),
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('mt-2 flex items-center')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$span,
+					_Utils_ap(
+						A2(
+							$elm$core$List$map,
+							function (_v1) {
+								var a = _v1.a;
+								var b = _v1.b;
+								return A2($elm$html$Html$Attributes$style, a, b);
+							},
+							_List_fromArray(
+								[
+									_Utils_Tuple2('width', '16px'),
+									_Utils_Tuple2('height', '16px')
+								])),
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('border border-green-100 inline-block')
+							])),
+					_List_Nil),
+					A2(
+					$elm$html$Html$span,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('ml-2 text-xs')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Day marked as public holiday')
+						]))
+				]))
+		]));
 var $author$project$Main$CMsg = function (a) {
 	return {$: 5, a: a};
 };
@@ -6430,7 +6525,6 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
-var $elm$html$Html$span = _VirtualDom_node('span');
 var $author$project$CalendarGenerator$viewDate = F3(
 	function (phs, lwds, maybeDate) {
 		var isPh = A2(
@@ -6729,7 +6823,12 @@ var $author$project$Main$view = function (model) {
 											[
 												$elm$html$Html$text('Show non-weekend possibilities too')
 											]))
-									]))
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_Nil,
+								_List_fromArray(
+									[$author$project$Main$viewLegend]))
 							]))
 					])),
 				A2(

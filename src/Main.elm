@@ -180,6 +180,7 @@ view model =
                         [ H.text "Show non-weekend possibilities too"
                         ]
                     ]
+                , H.div [] [ viewLegend ]
                 ]
             ]
         , H.div
@@ -236,3 +237,28 @@ months =
     , Time.Nov
     , Time.Dec
     ]
+
+
+viewLegend : H.Html Msg
+viewLegend =
+    H.div []
+        [ H.div [ Attr.class "text-sm mb-3" ] [ H.text "Legend" ]
+        , H.div [ Attr.class "flex items-center" ]
+            [ H.span
+                (List.map (\( a, b ) -> Attr.style a b) [ ( "width", "16px" ), ( "height", "16px" ) ]
+                    ++ [ Attr.class "bg-green-100 inline-block"
+                       ]
+                )
+                []
+            , H.span [ Attr.class "ml-2 text-xs" ] [ H.text "Potential long leave" ]
+            ]
+        , H.div [ Attr.class "mt-2 flex items-center" ]
+            [ H.span
+                (List.map (\( a, b ) -> Attr.style a b) [ ( "width", "16px" ), ( "height", "16px" ) ]
+                    ++ [ Attr.class "border border-green-100 inline-block"
+                       ]
+                )
+                []
+            , H.span [ Attr.class "ml-2 text-xs" ] [ H.text "Day marked as public holiday" ]
+            ]
+        ]
