@@ -8,7 +8,7 @@ do
    ATIME=`stat src/*` 
    if [[ "$ATIME" != "$LTIME" ]]
    then    
-       elm make src/Main.elm --output main.js
+       elm make src/Main.elm --output main.js --optimize
        LTIME=$ATIME
    fi
    sleep 3 
