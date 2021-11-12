@@ -80,271 +80,6 @@ function A9(fun, a, b, c, d, e, f, g, h, i) {
 console.warn('Compiled in DEV mode. Follow the advice at https://elm-lang.org/0.19.1/optimize for better performance and smaller assets.');
 
 
-// EQUALITY
-
-function _Utils_eq(x, y)
-{
-	for (
-		var pair, stack = [], isEqual = _Utils_eqHelp(x, y, 0, stack);
-		isEqual && (pair = stack.pop());
-		isEqual = _Utils_eqHelp(pair.a, pair.b, 0, stack)
-		)
-	{}
-
-	return isEqual;
-}
-
-function _Utils_eqHelp(x, y, depth, stack)
-{
-	if (x === y)
-	{
-		return true;
-	}
-
-	if (typeof x !== 'object' || x === null || y === null)
-	{
-		typeof x === 'function' && _Debug_crash(5);
-		return false;
-	}
-
-	if (depth > 100)
-	{
-		stack.push(_Utils_Tuple2(x,y));
-		return true;
-	}
-
-	/**/
-	if (x.$ === 'Set_elm_builtin')
-	{
-		x = $elm$core$Set$toList(x);
-		y = $elm$core$Set$toList(y);
-	}
-	if (x.$ === 'RBNode_elm_builtin' || x.$ === 'RBEmpty_elm_builtin')
-	{
-		x = $elm$core$Dict$toList(x);
-		y = $elm$core$Dict$toList(y);
-	}
-	//*/
-
-	/**_UNUSED/
-	if (x.$ < 0)
-	{
-		x = $elm$core$Dict$toList(x);
-		y = $elm$core$Dict$toList(y);
-	}
-	//*/
-
-	for (var key in x)
-	{
-		if (!_Utils_eqHelp(x[key], y[key], depth + 1, stack))
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
-var _Utils_equal = F2(_Utils_eq);
-var _Utils_notEqual = F2(function(a, b) { return !_Utils_eq(a,b); });
-
-
-
-// COMPARISONS
-
-// Code in Generate/JavaScript.hs, Basics.js, and List.js depends on
-// the particular integer values assigned to LT, EQ, and GT.
-
-function _Utils_cmp(x, y, ord)
-{
-	if (typeof x !== 'object')
-	{
-		return x === y ? /*EQ*/ 0 : x < y ? /*LT*/ -1 : /*GT*/ 1;
-	}
-
-	/**/
-	if (x instanceof String)
-	{
-		var a = x.valueOf();
-		var b = y.valueOf();
-		return a === b ? 0 : a < b ? -1 : 1;
-	}
-	//*/
-
-	/**_UNUSED/
-	if (typeof x.$ === 'undefined')
-	//*/
-	/**/
-	if (x.$[0] === '#')
-	//*/
-	{
-		return (ord = _Utils_cmp(x.a, y.a))
-			? ord
-			: (ord = _Utils_cmp(x.b, y.b))
-				? ord
-				: _Utils_cmp(x.c, y.c);
-	}
-
-	// traverse conses until end of a list or a mismatch
-	for (; x.b && y.b && !(ord = _Utils_cmp(x.a, y.a)); x = x.b, y = y.b) {} // WHILE_CONSES
-	return ord || (x.b ? /*GT*/ 1 : y.b ? /*LT*/ -1 : /*EQ*/ 0);
-}
-
-var _Utils_lt = F2(function(a, b) { return _Utils_cmp(a, b) < 0; });
-var _Utils_le = F2(function(a, b) { return _Utils_cmp(a, b) < 1; });
-var _Utils_gt = F2(function(a, b) { return _Utils_cmp(a, b) > 0; });
-var _Utils_ge = F2(function(a, b) { return _Utils_cmp(a, b) >= 0; });
-
-var _Utils_compare = F2(function(x, y)
-{
-	var n = _Utils_cmp(x, y);
-	return n < 0 ? $elm$core$Basics$LT : n ? $elm$core$Basics$GT : $elm$core$Basics$EQ;
-});
-
-
-// COMMON VALUES
-
-var _Utils_Tuple0_UNUSED = 0;
-var _Utils_Tuple0 = { $: '#0' };
-
-function _Utils_Tuple2_UNUSED(a, b) { return { a: a, b: b }; }
-function _Utils_Tuple2(a, b) { return { $: '#2', a: a, b: b }; }
-
-function _Utils_Tuple3_UNUSED(a, b, c) { return { a: a, b: b, c: c }; }
-function _Utils_Tuple3(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
-
-function _Utils_chr_UNUSED(c) { return c; }
-function _Utils_chr(c) { return new String(c); }
-
-
-// RECORDS
-
-function _Utils_update(oldRecord, updatedFields)
-{
-	var newRecord = {};
-
-	for (var key in oldRecord)
-	{
-		newRecord[key] = oldRecord[key];
-	}
-
-	for (var key in updatedFields)
-	{
-		newRecord[key] = updatedFields[key];
-	}
-
-	return newRecord;
-}
-
-
-// APPEND
-
-var _Utils_append = F2(_Utils_ap);
-
-function _Utils_ap(xs, ys)
-{
-	// append Strings
-	if (typeof xs === 'string')
-	{
-		return xs + ys;
-	}
-
-	// append Lists
-	if (!xs.b)
-	{
-		return ys;
-	}
-	var root = _List_Cons(xs.a, ys);
-	xs = xs.b
-	for (var curr = root; xs.b; xs = xs.b) // WHILE_CONS
-	{
-		curr = curr.b = _List_Cons(xs.a, ys);
-	}
-	return root;
-}
-
-
-
-var _List_Nil_UNUSED = { $: 0 };
-var _List_Nil = { $: '[]' };
-
-function _List_Cons_UNUSED(hd, tl) { return { $: 1, a: hd, b: tl }; }
-function _List_Cons(hd, tl) { return { $: '::', a: hd, b: tl }; }
-
-
-var _List_cons = F2(_List_Cons);
-
-function _List_fromArray(arr)
-{
-	var out = _List_Nil;
-	for (var i = arr.length; i--; )
-	{
-		out = _List_Cons(arr[i], out);
-	}
-	return out;
-}
-
-function _List_toArray(xs)
-{
-	for (var out = []; xs.b; xs = xs.b) // WHILE_CONS
-	{
-		out.push(xs.a);
-	}
-	return out;
-}
-
-var _List_map2 = F3(function(f, xs, ys)
-{
-	for (var arr = []; xs.b && ys.b; xs = xs.b, ys = ys.b) // WHILE_CONSES
-	{
-		arr.push(A2(f, xs.a, ys.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map3 = F4(function(f, xs, ys, zs)
-{
-	for (var arr = []; xs.b && ys.b && zs.b; xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A3(f, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map4 = F5(function(f, ws, xs, ys, zs)
-{
-	for (var arr = []; ws.b && xs.b && ys.b && zs.b; ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A4(f, ws.a, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map5 = F6(function(f, vs, ws, xs, ys, zs)
-{
-	for (var arr = []; vs.b && ws.b && xs.b && ys.b && zs.b; vs = vs.b, ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A5(f, vs.a, ws.a, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_sortBy = F2(function(f, xs)
-{
-	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
-		return _Utils_cmp(f(a), f(b));
-	}));
-});
-
-var _List_sortWith = F2(function(f, xs)
-{
-	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
-		var ord = A2(f, a, b);
-		return ord === $elm$core$Basics$EQ ? 0 : ord === $elm$core$Basics$LT ? -1 : 1;
-	}));
-});
-
-
-
 var _JsArray_empty = [];
 
 function _JsArray_singleton(value)
@@ -790,6 +525,271 @@ function _Debug_regionToString(region)
 	}
 	return 'on lines ' + region.start.line + ' through ' + region.end.line;
 }
+
+
+
+// EQUALITY
+
+function _Utils_eq(x, y)
+{
+	for (
+		var pair, stack = [], isEqual = _Utils_eqHelp(x, y, 0, stack);
+		isEqual && (pair = stack.pop());
+		isEqual = _Utils_eqHelp(pair.a, pair.b, 0, stack)
+		)
+	{}
+
+	return isEqual;
+}
+
+function _Utils_eqHelp(x, y, depth, stack)
+{
+	if (x === y)
+	{
+		return true;
+	}
+
+	if (typeof x !== 'object' || x === null || y === null)
+	{
+		typeof x === 'function' && _Debug_crash(5);
+		return false;
+	}
+
+	if (depth > 100)
+	{
+		stack.push(_Utils_Tuple2(x,y));
+		return true;
+	}
+
+	/**/
+	if (x.$ === 'Set_elm_builtin')
+	{
+		x = $elm$core$Set$toList(x);
+		y = $elm$core$Set$toList(y);
+	}
+	if (x.$ === 'RBNode_elm_builtin' || x.$ === 'RBEmpty_elm_builtin')
+	{
+		x = $elm$core$Dict$toList(x);
+		y = $elm$core$Dict$toList(y);
+	}
+	//*/
+
+	/**_UNUSED/
+	if (x.$ < 0)
+	{
+		x = $elm$core$Dict$toList(x);
+		y = $elm$core$Dict$toList(y);
+	}
+	//*/
+
+	for (var key in x)
+	{
+		if (!_Utils_eqHelp(x[key], y[key], depth + 1, stack))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+var _Utils_equal = F2(_Utils_eq);
+var _Utils_notEqual = F2(function(a, b) { return !_Utils_eq(a,b); });
+
+
+
+// COMPARISONS
+
+// Code in Generate/JavaScript.hs, Basics.js, and List.js depends on
+// the particular integer values assigned to LT, EQ, and GT.
+
+function _Utils_cmp(x, y, ord)
+{
+	if (typeof x !== 'object')
+	{
+		return x === y ? /*EQ*/ 0 : x < y ? /*LT*/ -1 : /*GT*/ 1;
+	}
+
+	/**/
+	if (x instanceof String)
+	{
+		var a = x.valueOf();
+		var b = y.valueOf();
+		return a === b ? 0 : a < b ? -1 : 1;
+	}
+	//*/
+
+	/**_UNUSED/
+	if (typeof x.$ === 'undefined')
+	//*/
+	/**/
+	if (x.$[0] === '#')
+	//*/
+	{
+		return (ord = _Utils_cmp(x.a, y.a))
+			? ord
+			: (ord = _Utils_cmp(x.b, y.b))
+				? ord
+				: _Utils_cmp(x.c, y.c);
+	}
+
+	// traverse conses until end of a list or a mismatch
+	for (; x.b && y.b && !(ord = _Utils_cmp(x.a, y.a)); x = x.b, y = y.b) {} // WHILE_CONSES
+	return ord || (x.b ? /*GT*/ 1 : y.b ? /*LT*/ -1 : /*EQ*/ 0);
+}
+
+var _Utils_lt = F2(function(a, b) { return _Utils_cmp(a, b) < 0; });
+var _Utils_le = F2(function(a, b) { return _Utils_cmp(a, b) < 1; });
+var _Utils_gt = F2(function(a, b) { return _Utils_cmp(a, b) > 0; });
+var _Utils_ge = F2(function(a, b) { return _Utils_cmp(a, b) >= 0; });
+
+var _Utils_compare = F2(function(x, y)
+{
+	var n = _Utils_cmp(x, y);
+	return n < 0 ? $elm$core$Basics$LT : n ? $elm$core$Basics$GT : $elm$core$Basics$EQ;
+});
+
+
+// COMMON VALUES
+
+var _Utils_Tuple0_UNUSED = 0;
+var _Utils_Tuple0 = { $: '#0' };
+
+function _Utils_Tuple2_UNUSED(a, b) { return { a: a, b: b }; }
+function _Utils_Tuple2(a, b) { return { $: '#2', a: a, b: b }; }
+
+function _Utils_Tuple3_UNUSED(a, b, c) { return { a: a, b: b, c: c }; }
+function _Utils_Tuple3(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
+
+function _Utils_chr_UNUSED(c) { return c; }
+function _Utils_chr(c) { return new String(c); }
+
+
+// RECORDS
+
+function _Utils_update(oldRecord, updatedFields)
+{
+	var newRecord = {};
+
+	for (var key in oldRecord)
+	{
+		newRecord[key] = oldRecord[key];
+	}
+
+	for (var key in updatedFields)
+	{
+		newRecord[key] = updatedFields[key];
+	}
+
+	return newRecord;
+}
+
+
+// APPEND
+
+var _Utils_append = F2(_Utils_ap);
+
+function _Utils_ap(xs, ys)
+{
+	// append Strings
+	if (typeof xs === 'string')
+	{
+		return xs + ys;
+	}
+
+	// append Lists
+	if (!xs.b)
+	{
+		return ys;
+	}
+	var root = _List_Cons(xs.a, ys);
+	xs = xs.b
+	for (var curr = root; xs.b; xs = xs.b) // WHILE_CONS
+	{
+		curr = curr.b = _List_Cons(xs.a, ys);
+	}
+	return root;
+}
+
+
+
+var _List_Nil_UNUSED = { $: 0 };
+var _List_Nil = { $: '[]' };
+
+function _List_Cons_UNUSED(hd, tl) { return { $: 1, a: hd, b: tl }; }
+function _List_Cons(hd, tl) { return { $: '::', a: hd, b: tl }; }
+
+
+var _List_cons = F2(_List_Cons);
+
+function _List_fromArray(arr)
+{
+	var out = _List_Nil;
+	for (var i = arr.length; i--; )
+	{
+		out = _List_Cons(arr[i], out);
+	}
+	return out;
+}
+
+function _List_toArray(xs)
+{
+	for (var out = []; xs.b; xs = xs.b) // WHILE_CONS
+	{
+		out.push(xs.a);
+	}
+	return out;
+}
+
+var _List_map2 = F3(function(f, xs, ys)
+{
+	for (var arr = []; xs.b && ys.b; xs = xs.b, ys = ys.b) // WHILE_CONSES
+	{
+		arr.push(A2(f, xs.a, ys.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map3 = F4(function(f, xs, ys, zs)
+{
+	for (var arr = []; xs.b && ys.b && zs.b; xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A3(f, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map4 = F5(function(f, ws, xs, ys, zs)
+{
+	for (var arr = []; ws.b && xs.b && ys.b && zs.b; ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A4(f, ws.a, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map5 = F6(function(f, vs, ws, xs, ys, zs)
+{
+	for (var arr = []; vs.b && ws.b && xs.b && ys.b && zs.b; vs = vs.b, ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A5(f, vs.a, ws.a, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_sortBy = F2(function(f, xs)
+{
+	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
+		return _Utils_cmp(f(a), f(b));
+	}));
+});
+
+var _List_sortWith = F2(function(f, xs)
+{
+	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
+		var ord = A2(f, a, b);
+		return ord === $elm$core$Basics$EQ ? 0 : ord === $elm$core$Basics$LT ? -1 : 1;
+	}));
+});
 
 
 
@@ -4355,10 +4355,31 @@ function _Browser_load(url)
 		}
 	}));
 }
-var $elm$core$Basics$EQ = {$: 'EQ'};
-var $elm$core$Basics$GT = {$: 'GT'};
-var $elm$core$Basics$LT = {$: 'LT'};
 var $elm$core$List$cons = _List_cons;
+var $elm$core$Elm$JsArray$foldr = _JsArray_foldr;
+var $elm$core$Array$foldr = F3(
+	function (func, baseCase, _v0) {
+		var tree = _v0.c;
+		var tail = _v0.d;
+		var helper = F2(
+			function (node, acc) {
+				if (node.$ === 'SubTree') {
+					var subTree = node.a;
+					return A3($elm$core$Elm$JsArray$foldr, helper, acc, subTree);
+				} else {
+					var values = node.a;
+					return A3($elm$core$Elm$JsArray$foldr, func, acc, values);
+				}
+			});
+		return A3(
+			$elm$core$Elm$JsArray$foldr,
+			helper,
+			A3($elm$core$Elm$JsArray$foldr, func, baseCase, tail),
+			tree);
+	});
+var $elm$core$Array$toList = function (array) {
+	return A3($elm$core$Array$foldr, $elm$core$List$cons, _List_Nil, array);
+};
 var $elm$core$Dict$foldr = F3(
 	function (func, acc, t) {
 		foldr:
@@ -4411,30 +4432,9 @@ var $elm$core$Set$toList = function (_v0) {
 	var dict = _v0.a;
 	return $elm$core$Dict$keys(dict);
 };
-var $elm$core$Elm$JsArray$foldr = _JsArray_foldr;
-var $elm$core$Array$foldr = F3(
-	function (func, baseCase, _v0) {
-		var tree = _v0.c;
-		var tail = _v0.d;
-		var helper = F2(
-			function (node, acc) {
-				if (node.$ === 'SubTree') {
-					var subTree = node.a;
-					return A3($elm$core$Elm$JsArray$foldr, helper, acc, subTree);
-				} else {
-					var values = node.a;
-					return A3($elm$core$Elm$JsArray$foldr, func, acc, values);
-				}
-			});
-		return A3(
-			$elm$core$Elm$JsArray$foldr,
-			helper,
-			A3($elm$core$Elm$JsArray$foldr, func, baseCase, tail),
-			tree);
-	});
-var $elm$core$Array$toList = function (array) {
-	return A3($elm$core$Array$foldr, $elm$core$List$cons, _List_Nil, array);
-};
+var $elm$core$Basics$EQ = {$: 'EQ'};
+var $elm$core$Basics$GT = {$: 'GT'};
+var $elm$core$Basics$LT = {$: 'LT'};
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
 };
@@ -4830,6 +4830,7 @@ var $elm$core$Result$isOk = function (result) {
 		return false;
 	}
 };
+var $elm$json$Json$Decode$andThen = _Json_andThen;
 var $elm$json$Json$Decode$map = _Json_map1;
 var $elm$json$Json$Decode$map2 = _Json_map2;
 var $elm$json$Json$Decode$succeed = _Json_succeed;
@@ -5144,24 +5145,135 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$element = _Browser_element;
-var $elm$time$Time$Apr = {$: 'Apr'};
-var $elm$time$Time$Aug = {$: 'Aug'};
-var $elm$time$Time$Dec = {$: 'Dec'};
+var $elm$json$Json$Decode$field = _Json_decodeField;
 var $author$project$Main$GenerateLongWeekends = {$: 'GenerateLongWeekends'};
-var $elm$time$Time$Jan = {$: 'Jan'};
-var $author$project$Main$Model = F5(
-	function (calendarDays, publicHolidays, weekendDays, longWeekends, numberOfForcedLeaves) {
-		return {calendarDays: calendarDays, longWeekends: longWeekends, numberOfForcedLeaves: numberOfForcedLeaves, publicHolidays: publicHolidays, weekendDays: weekendDays};
+var $author$project$Main$Model = F6(
+	function (year, publicHolidays, weekendDays, longWeekends, numberOfForcedLeaves, showNonWeekendsToo) {
+		return {longWeekends: longWeekends, numberOfForcedLeaves: numberOfForcedLeaves, publicHolidays: publicHolidays, showNonWeekendsToo: showNonWeekendsToo, weekendDays: weekendDays, year: year};
 	});
-var $elm$time$Time$Nov = {$: 'Nov'};
-var $elm$time$Time$Oct = {$: 'Oct'};
+var $elm$time$Time$Sat = {$: 'Sat'};
+var $elm$time$Time$Sun = {$: 'Sun'};
+var $author$project$CalendarDays$weekends_ = _List_fromArray(
+	[$elm$time$Time$Sun, $elm$time$Time$Sat]);
+var $author$project$Main$init = function (_v0) {
+	var year = _v0.year;
+	return _Utils_Tuple2(
+		A6(
+			$author$project$Main$Model,
+			$elm$core$String$fromInt(year),
+			_List_Nil,
+			$author$project$CalendarDays$weekends_,
+			_List_Nil,
+			2,
+			true),
+		A2(
+			$elm$core$Task$perform,
+			function (_v1) {
+				return $author$project$Main$GenerateLongWeekends;
+			},
+			$elm$core$Task$succeed(1)));
+};
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $elm$core$Platform$Sub$batch = _Platform_batch;
+var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
+var $author$project$Main$subscriptions = function (_v0) {
+	return $elm$core$Platform$Sub$none;
+};
+var $elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
+		while (true) {
+			if (!list.b) {
+				return false;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
+				} else {
+					var $temp$isOkay = isOkay,
+						$temp$list = xs;
+					isOkay = $temp$isOkay;
+					list = $temp$list;
+					continue any;
+				}
+			}
+		}
+	});
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $elm$core$Basics$ge = _Utils_ge;
+var $elm_community$list_extra$List$Extra$foldl1 = F2(
+	function (func, list) {
+		if (!list.b) {
+			return $elm$core$Maybe$Nothing;
+		} else {
+			var x = list.a;
+			var xs = list.b;
+			return $elm$core$Maybe$Just(
+				A3($elm$core$List$foldl, func, x, xs));
+		}
+	});
+var $elm_community$list_extra$List$Extra$maximumWith = F2(
+	function (comparator, list) {
+		return A2(
+			$elm_community$list_extra$List$Extra$foldl1,
+			F2(
+				function (x, y) {
+					var _v0 = A2(comparator, x, y);
+					if (_v0.$ === 'GT') {
+						return x;
+					} else {
+						return y;
+					}
+				}),
+			list);
+	});
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$CalendarDays$getItemWithMaxLength = function (list) {
+	return A2(
+		$elm$core$Maybe$withDefault,
+		_List_Nil,
+		A2(
+			$elm_community$list_extra$List$Extra$maximumWith,
+			F2(
+				function (a, b) {
+					return (_Utils_cmp(
+						$elm$core$List$length(a),
+						$elm$core$List$length(b)) > -1) ? $elm$core$Basics$GT : $elm$core$Basics$LT;
+				}),
+			list));
+};
+var $elm$core$Basics$compare = _Utils_compare;
+var $justinmimbs$date$Date$compare = F2(
+	function (_v0, _v1) {
+		var a = _v0.a;
+		var b = _v1.a;
+		return A2($elm$core$Basics$compare, a, b);
+	});
+var $elm$core$List$sortWith = _List_sortWith;
+var $justinmimbs$date$Date$Days = {$: 'Days'};
+var $justinmimbs$date$Date$Months = {$: 'Months'};
 var $justinmimbs$date$Date$RD = function (a) {
 	return {$: 'RD', a: a};
 };
-var $elm$core$Basics$clamp = F3(
-	function (low, high, number) {
-		return (_Utils_cmp(number, low) < 0) ? low : ((_Utils_cmp(number, high) > 0) ? high : number);
-	});
 var $elm$core$Basics$modBy = _Basics_modBy;
 var $elm$core$Basics$neq = _Utils_notEqual;
 var $justinmimbs$date$Date$isLeapYear = function (y) {
@@ -5235,21 +5347,6 @@ var $justinmimbs$date$Date$daysInMonth = F2(
 				return 31;
 		}
 	});
-var $justinmimbs$date$Date$fromCalendarDate = F3(
-	function (y, m, d) {
-		return $justinmimbs$date$Date$RD(
-			($justinmimbs$date$Date$daysBeforeYear(y) + A2($justinmimbs$date$Date$daysBeforeMonth, y, m)) + A3(
-				$elm$core$Basics$clamp,
-				1,
-				A2($justinmimbs$date$Date$daysInMonth, y, m),
-				d));
-	});
-var $author$project$CalendarDays$CalendarDate = F3(
-	function (date, isHoliday, isWeekend) {
-		return {date: date, isHoliday: isHoliday, isWeekend: isWeekend};
-	});
-var $justinmimbs$date$Date$Days = {$: 'Days'};
-var $justinmimbs$date$Date$Months = {$: 'Months'};
 var $elm$core$Basics$min = F2(
 	function (x, y) {
 		return (_Utils_cmp(x, y) < 0) ? x : y;
@@ -5282,11 +5379,17 @@ var $justinmimbs$date$Date$monthToNumber = function (m) {
 			return 12;
 	}
 };
+var $elm$time$Time$Apr = {$: 'Apr'};
+var $elm$time$Time$Aug = {$: 'Aug'};
+var $elm$time$Time$Dec = {$: 'Dec'};
 var $elm$time$Time$Feb = {$: 'Feb'};
+var $elm$time$Time$Jan = {$: 'Jan'};
 var $elm$time$Time$Jul = {$: 'Jul'};
 var $elm$time$Time$Jun = {$: 'Jun'};
 var $elm$time$Time$Mar = {$: 'Mar'};
 var $elm$time$Time$May = {$: 'May'};
+var $elm$time$Time$Nov = {$: 'Nov'};
+var $elm$time$Time$Oct = {$: 'Oct'};
 var $elm$time$Time$Sep = {$: 'Sep'};
 var $justinmimbs$date$Date$numberToMonth = function (mn) {
 	var _v0 = A2($elm$core$Basics$max, 1, mn);
@@ -5402,49 +5505,6 @@ var $justinmimbs$date$Date$add = F3(
 				return $justinmimbs$date$Date$RD(rd + n);
 		}
 	});
-var $elm$core$List$any = F2(
-	function (isOkay, list) {
-		any:
-		while (true) {
-			if (!list.b) {
-				return false;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				if (isOkay(x)) {
-					return true;
-				} else {
-					var $temp$isOkay = isOkay,
-						$temp$list = xs;
-					isOkay = $temp$isOkay;
-					list = $temp$list;
-					continue any;
-				}
-			}
-		}
-	});
-var $justinmimbs$date$Date$toMonths = function (rd) {
-	var date = $justinmimbs$date$Date$toCalendarDate(
-		$justinmimbs$date$Date$RD(rd));
-	var wholeMonths = (12 * (date.year - 1)) + ($justinmimbs$date$Date$monthToNumber(date.month) - 1);
-	return wholeMonths + (date.day / 100);
-};
-var $elm$core$Basics$truncate = _Basics_truncate;
-var $justinmimbs$date$Date$diff = F3(
-	function (unit, _v0, _v1) {
-		var rd1 = _v0.a;
-		var rd2 = _v1.a;
-		switch (unit.$) {
-			case 'Years':
-				return ((($justinmimbs$date$Date$toMonths(rd2) - $justinmimbs$date$Date$toMonths(rd1)) | 0) / 12) | 0;
-			case 'Months':
-				return ($justinmimbs$date$Date$toMonths(rd2) - $justinmimbs$date$Date$toMonths(rd1)) | 0;
-			case 'Weeks':
-				return ((rd2 - rd1) / 7) | 0;
-			default:
-				return rd2 - rd1;
-		}
-	});
 var $elm$core$Basics$composeR = F3(
 	function (f, g, x) {
 		return g(
@@ -5452,8 +5512,6 @@ var $elm$core$Basics$composeR = F3(
 	});
 var $elm$time$Time$Fri = {$: 'Fri'};
 var $elm$time$Time$Mon = {$: 'Mon'};
-var $elm$time$Time$Sat = {$: 'Sat'};
-var $elm$time$Time$Sun = {$: 'Sun'};
 var $elm$time$Time$Thu = {$: 'Thu'};
 var $elm$time$Time$Tue = {$: 'Tue'};
 var $elm$time$Time$Wed = {$: 'Wed'};
@@ -5487,209 +5545,32 @@ var $justinmimbs$date$Date$weekdayNumber = function (_v0) {
 	}
 };
 var $justinmimbs$date$Date$weekday = A2($elm$core$Basics$composeR, $justinmimbs$date$Date$weekdayNumber, $justinmimbs$date$Date$numberToWeekday);
-var $author$project$CalendarDays$generateCalendarDays = F5(
-	function (start, end, holidays, weekendDays, result) {
-		generateCalendarDays:
-		while (true) {
-			var startPlusOneDay = A3($justinmimbs$date$Date$add, $justinmimbs$date$Date$Days, 1, start);
-			var endLoop = !A3($justinmimbs$date$Date$diff, $justinmimbs$date$Date$Days, start, end);
-			if (endLoop) {
-				return result;
-			} else {
-				var newResult = _Utils_ap(
-					result,
-					_List_fromArray(
-						[
-							A3(
-							$author$project$CalendarDays$CalendarDate,
-							start,
-							A2(
-								$elm$core$List$any,
-								function (date) {
-									return _Utils_eq(date, start);
-								},
-								holidays),
-							A2(
-								$elm$core$List$any,
-								$elm$core$Basics$eq(
-									$justinmimbs$date$Date$weekday(start)),
-								weekendDays))
-						]));
-				var $temp$start = startPlusOneDay,
-					$temp$end = end,
-					$temp$holidays = holidays,
-					$temp$weekendDays = weekendDays,
-					$temp$result = newResult;
-				start = $temp$start;
-				end = $temp$end;
-				holidays = $temp$holidays;
-				weekendDays = $temp$weekendDays;
-				result = $temp$result;
-				continue generateCalendarDays;
-			}
-		}
-	});
-var $author$project$CalendarDays$weekends_ = _List_fromArray(
-	[$elm$time$Time$Sat, $elm$time$Time$Sun]);
-var $author$project$Main$init = function (_v0) {
-	var year = 2021;
-	var startDate = A3($justinmimbs$date$Date$fromCalendarDate, year, $elm$time$Time$Jan, 1);
-	var endDate = A3($justinmimbs$date$Date$fromCalendarDate, year + 1, $elm$time$Time$Jan, 1);
-	return _Utils_Tuple2(
-		A5(
-			$author$project$Main$Model,
-			A5($author$project$CalendarDays$generateCalendarDays, startDate, endDate, _List_Nil, $author$project$CalendarDays$weekends_, _List_Nil),
-			_List_fromArray(
-				[
-					A3($justinmimbs$date$Date$fromCalendarDate, 2021, $elm$time$Time$Jan, 26),
-					A3($justinmimbs$date$Date$fromCalendarDate, 2021, $elm$time$Time$Apr, 14),
-					A3($justinmimbs$date$Date$fromCalendarDate, 2021, $elm$time$Time$Aug, 15),
-					A3($justinmimbs$date$Date$fromCalendarDate, 2021, $elm$time$Time$Oct, 2),
-					A3($justinmimbs$date$Date$fromCalendarDate, 2021, $elm$time$Time$Nov, 4),
-					A3($justinmimbs$date$Date$fromCalendarDate, 2021, $elm$time$Time$Dec, 25)
-				]),
-			$author$project$CalendarDays$weekends_,
-			_List_Nil,
-			1),
-		A2(
-			$elm$core$Task$perform,
-			function (_v1) {
-				return $author$project$Main$GenerateLongWeekends;
-			},
-			$elm$core$Task$succeed(1)));
-};
-var $elm$core$Platform$Sub$batch = _Platform_batch;
-var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $author$project$Main$subscriptions = function (_v0) {
-	return $elm$core$Platform$Sub$none;
-};
-var $elm$core$Basics$ge = _Utils_ge;
-var $elm_community$list_extra$List$Extra$foldl1 = F2(
-	function (func, list) {
-		if (!list.b) {
-			return $elm$core$Maybe$Nothing;
-		} else {
-			var x = list.a;
-			var xs = list.b;
-			return $elm$core$Maybe$Just(
-				A3($elm$core$List$foldl, func, x, xs));
-		}
-	});
-var $elm_community$list_extra$List$Extra$maximumWith = F2(
-	function (comparator, list) {
+var $author$project$CalendarDays$isHoliday = F3(
+	function (phs, weekends, date) {
 		return A2(
-			$elm_community$list_extra$List$Extra$foldl1,
-			F2(
-				function (x, y) {
-					var _v0 = A2(comparator, x, y);
-					if (_v0.$ === 'GT') {
-						return x;
-					} else {
-						return y;
-					}
-				}),
-			list);
-	});
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
-var $author$project$CalendarDays$getItemWithMaxLength = function (list) {
-	return A2(
-		$elm$core$Maybe$withDefault,
-		_List_Nil,
-		A2(
-			$elm_community$list_extra$List$Extra$maximumWith,
-			F2(
-				function (a, b) {
-					return (_Utils_cmp(
-						$elm$core$List$length(a),
-						$elm$core$List$length(b)) > -1) ? $elm$core$Basics$GT : $elm$core$Basics$LT;
-				}),
-			list));
-};
-var $elm$core$Basics$compare = _Utils_compare;
-var $justinmimbs$date$Date$compare = F2(
-	function (_v0, _v1) {
-		var a = _v0.a;
-		var b = _v1.a;
-		return A2($elm$core$Basics$compare, a, b);
-	});
-var $elm$core$List$sortWith = _List_sortWith;
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $author$project$CalendarDays$isHoliday = F2(
-	function (calendarDates, date) {
-		var _v0 = $elm$core$List$head(
-			A2(
-				$elm$core$List$filter,
-				function (d) {
-					return _Utils_eq(d.date, date);
-				},
-				calendarDates));
-		if (_v0.$ === 'Nothing') {
-			return false;
-		} else {
-			var d = _v0.a;
-			return d.isHoliday || d.isWeekend;
-		}
+			$elm$core$List$any,
+			$elm$core$Basics$eq(date),
+			phs) || A2(
+			$elm$core$List$any,
+			$elm$core$Basics$eq(
+				$justinmimbs$date$Date$weekday(date)),
+			weekends);
 	});
 var $elm$core$Basics$negate = function (n) {
 	return -n;
 };
-var $author$project$CalendarDays$toCalDate = F3(
-	function (ph, weekends, date_) {
-		return A3(
-			$author$project$CalendarDays$CalendarDate,
-			date_,
-			A2(
-				$elm$core$List$any,
-				function (date) {
-					return _Utils_eq(date, date_);
-				},
-				ph),
-			A2(
-				$elm$core$List$any,
-				$elm$core$Basics$eq(
-					$justinmimbs$date$Date$weekday(date_)),
-				weekends));
-	});
-var $author$project$CalendarDays$traverseBackwards = F5(
-	function (calendarDates, publicHolidays, weekends, fromDate, days) {
+var $author$project$CalendarDays$traverseBackwards = F4(
+	function (publicHolidays, weekends, fromDate, days) {
 		var recTraverseBack = F3(
 			function (result, pointDate, days_) {
 				recTraverseBack:
 				while (true) {
 					var prevDate = A3($justinmimbs$date$Date$add, $justinmimbs$date$Date$Days, -1, pointDate);
-					var prevDayIsHoliday = A2($author$project$CalendarDays$isHoliday, calendarDates, prevDate);
-					var pointDateAsCalendarDate = A3($author$project$CalendarDays$toCalDate, publicHolidays, weekends, pointDate);
+					var prevDayIsHoliday = A3($author$project$CalendarDays$isHoliday, publicHolidays, weekends, prevDate);
 					var newResult = _Utils_ap(
 						result,
 						_List_fromArray(
-							[pointDateAsCalendarDate]));
+							[pointDate]));
 					if (prevDayIsHoliday) {
 						var $temp$result = newResult,
 							$temp$pointDate = prevDate,
@@ -5716,19 +5597,18 @@ var $author$project$CalendarDays$traverseBackwards = F5(
 			});
 		return A3(recTraverseBack, _List_Nil, fromDate, days);
 	});
-var $author$project$CalendarDays$traverseForwards = F5(
-	function (calendarDates, publicHolidays, weekends, fromDate, days) {
+var $author$project$CalendarDays$traverseForwards = F4(
+	function (publicHolidays, weekends, fromDate, days) {
 		var recTraverseForward = F3(
 			function (result, pointDate, days_) {
 				recTraverseForward:
 				while (true) {
-					var pointDateAsCalendarDate = A3($author$project$CalendarDays$toCalDate, publicHolidays, weekends, pointDate);
 					var nextDate = A3($justinmimbs$date$Date$add, $justinmimbs$date$Date$Days, 1, pointDate);
-					var nextDayIsHoliday = A2($author$project$CalendarDays$isHoliday, calendarDates, nextDate);
+					var nextDayIsHoliday = A3($author$project$CalendarDays$isHoliday, publicHolidays, weekends, nextDate);
 					var newResult = _Utils_ap(
 						result,
 						_List_fromArray(
-							[pointDateAsCalendarDate]));
+							[pointDate]));
 					if (nextDayIsHoliday) {
 						var $temp$result = newResult,
 							$temp$pointDate = nextDate,
@@ -5801,21 +5681,18 @@ var $elm_community$list_extra$List$Extra$uniqueHelp = F4(
 var $elm_community$list_extra$List$Extra$unique = function (list) {
 	return A4($elm_community$list_extra$List$Extra$uniqueHelp, $elm$core$Basics$identity, _List_Nil, list, _List_Nil);
 };
-var $author$project$CalendarDays$getLeaveRangesFromDate = F5(
-	function (calendarDates, publicHolidays, weekend_, date, _int) {
+var $author$project$CalendarDays$getLeaveRangesFromDate = F4(
+	function (publicHolidays, weekend_, date, _int) {
 		var sortedUnique = function (_v1) {
 			var b = _v1.a;
 			var f = _v1.b;
 			return A2(
 				$elm$core$List$sortWith,
-				F2(
-					function (a, b_) {
-						return A2($justinmimbs$date$Date$compare, a.date, b_.date);
-					}),
+				$justinmimbs$date$Date$compare,
 				$elm_community$list_extra$List$Extra$unique(
 					_Utils_ap(
-						A5($author$project$CalendarDays$traverseBackwards, calendarDates, publicHolidays, weekend_, date, b),
-						A5($author$project$CalendarDays$traverseForwards, calendarDates, publicHolidays, weekend_, date, f))));
+						A4($author$project$CalendarDays$traverseBackwards, publicHolidays, weekend_, date, b),
+						A4($author$project$CalendarDays$traverseForwards, publicHolidays, weekend_, date, f))));
 		};
 		var recGetLeaveRangeFromDate = F3(
 			function (result, date_, _v0) {
@@ -5839,33 +5716,128 @@ var $author$project$CalendarDays$getLeaveRangesFromDate = F5(
 			date,
 			_Utils_Tuple2(_int, 0));
 	});
-var $elm$core$Debug$log = _Debug_log;
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $elm$core$String$trim = _String_trim;
 var $author$project$Main$update = F2(
 	function (msg, model) {
-		switch (msg.$) {
-			case 'NoOp':
-				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-			case 'GenerateLongWeekends':
-				var longWeekendsList = A2(
-					$elm$core$List$map,
-					function (date) {
-						return $author$project$CalendarDays$getItemWithMaxLength(
-							A5($author$project$CalendarDays$getLeaveRangesFromDate, model.calendarDays, model.publicHolidays, model.weekendDays, date, model.numberOfForcedLeaves));
-					},
-					model.publicHolidays);
-				return _Utils_Tuple2(
-					_Utils_update(
+		update:
+		while (true) {
+			switch (msg.$) {
+				case 'NoOp':
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				case 'UpdateForcedLeaves':
+					var _int = msg.a;
+					var $temp$msg = $author$project$Main$GenerateLongWeekends,
+						$temp$model = _Utils_update(
 						model,
-						{longWeekends: longWeekendsList}),
-					$elm$core$Platform$Cmd$none);
-			default:
-				var cmsg = msg.a;
-				var _v1 = A2($elm$core$Debug$log, 'cmsg', cmsg);
-				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						{
+							numberOfForcedLeaves: (_int < 0) ? 0 : _int
+						});
+					msg = $temp$msg;
+					model = $temp$model;
+					continue update;
+				case 'UpdateYear':
+					var str = msg.a;
+					var $temp$msg = $author$project$Main$GenerateLongWeekends,
+						$temp$model = _Utils_update(
+						model,
+						{
+							year: $elm$core$String$trim(str)
+						});
+					msg = $temp$msg;
+					model = $temp$model;
+					continue update;
+				case 'ToggleNonWeekends':
+					var bool = msg.a;
+					var $temp$msg = $author$project$Main$GenerateLongWeekends,
+						$temp$model = _Utils_update(
+						model,
+						{showNonWeekendsToo: bool});
+					msg = $temp$msg;
+					model = $temp$model;
+					continue update;
+				case 'GenerateLongWeekends':
+					var longWeekendsList = A2(
+						$elm$core$List$map,
+						function (date) {
+							return $author$project$CalendarDays$getItemWithMaxLength(
+								A4($author$project$CalendarDays$getLeaveRangesFromDate, model.publicHolidays, model.weekendDays, date, model.numberOfForcedLeaves));
+						},
+						model.publicHolidays);
+					var hasWeekendsInIt = function (list) {
+						return A2(
+							$elm$core$List$any,
+							function (date) {
+								return A2(
+									$elm$core$List$any,
+									function (wd) {
+										return _Utils_eq(
+											wd,
+											$justinmimbs$date$Date$weekday(date));
+									},
+									model.weekendDays);
+							},
+							list);
+					};
+					var lwdFilteredForWeekends = model.showNonWeekendsToo ? longWeekendsList : A2($elm$core$List$filter, hasWeekendsInIt, longWeekendsList);
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{longWeekends: lwdFilteredForWeekends}),
+						$elm$core$Platform$Cmd$none);
+				default:
+					var cmsg = msg.a;
+					var date = cmsg.a;
+					if (date.$ === 'Nothing') {
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+					} else {
+						var d = date.a;
+						var newPhList = A2(
+							$elm$core$List$any,
+							$elm$core$Basics$eq(d),
+							model.publicHolidays) ? A2(
+							$elm$core$List$filter,
+							$elm$core$Basics$neq(d),
+							model.publicHolidays) : A2($elm$core$List$cons, d, model.publicHolidays);
+						var $temp$msg = $author$project$Main$GenerateLongWeekends,
+							$temp$model = _Utils_update(
+							model,
+							{publicHolidays: newPhList});
+						msg = $temp$msg;
+						model = $temp$model;
+						continue update;
+					}
+			}
 		}
 	});
+var $author$project$Main$ToggleNonWeekends = function (a) {
+	return {$: 'ToggleNonWeekends', a: a};
+};
+var $author$project$Main$UpdateForcedLeaves = function (a) {
+	return {$: 'UpdateForcedLeaves', a: a};
+};
+var $author$project$Main$UpdateYear = function (a) {
+	return {$: 'UpdateYear', a: a};
+};
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
+var $elm$html$Html$Attributes$checked = $elm$html$Html$Attributes$boolProperty('checked');
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$string(string));
+	});
+var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $elm$core$List$append = F2(
 	function (xs, ys) {
 		if (!ys.b) {
@@ -5878,18 +5850,74 @@ var $elm$core$List$concat = function (lists) {
 	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
 };
 var $elm$html$Html$div = _VirtualDom_node('div');
+var $elm$html$Html$Attributes$for = $elm$html$Html$Attributes$stringProperty('htmlFor');
+var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
+var $elm$html$Html$input = _VirtualDom_node('input');
+var $elm$html$Html$label = _VirtualDom_node('label');
+var $elm$virtual_dom$VirtualDom$Normal = function (a) {
+	return {$: 'Normal', a: a};
+};
+var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var $elm$html$Html$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$Normal(decoder));
+	});
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
+var $elm$html$Html$Events$targetChecked = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'checked']),
+	$elm$json$Json$Decode$bool);
+var $elm$html$Html$Events$onCheck = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'change',
+		A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetChecked));
+};
+var $elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
+};
+var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
+};
+var $elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $elm$html$Html$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
+};
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
+var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$Main$CMsg = function (a) {
 	return {$: 'CMsg', a: a};
 };
-var $elm$json$Json$Encode$string = _Json_wrap;
-var $elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$string(string));
-	});
-var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $author$project$Main$months = _List_fromArray(
 	[$elm$time$Time$Jan, $elm$time$Time$Feb, $elm$time$Time$Mar, $elm$time$Time$Apr, $elm$time$Time$May, $elm$time$Time$Jun, $elm$time$Time$Jul, $elm$time$Time$Aug, $elm$time$Time$Sep, $elm$time$Time$Oct, $elm$time$Time$Nov, $elm$time$Time$Dec]);
 var $justinmimbs$date$Date$Day = {$: 'Day'};
@@ -6014,6 +6042,41 @@ var $justinmimbs$date$Date$ceiling = F2(
 			var unit = _v0.b;
 			return A3($justinmimbs$date$Date$add, unit, n, floored);
 		}
+	});
+var $justinmimbs$date$Date$toMonths = function (rd) {
+	var date = $justinmimbs$date$Date$toCalendarDate(
+		$justinmimbs$date$Date$RD(rd));
+	var wholeMonths = (12 * (date.year - 1)) + ($justinmimbs$date$Date$monthToNumber(date.month) - 1);
+	return wholeMonths + (date.day / 100);
+};
+var $elm$core$Basics$truncate = _Basics_truncate;
+var $justinmimbs$date$Date$diff = F3(
+	function (unit, _v0, _v1) {
+		var rd1 = _v0.a;
+		var rd2 = _v1.a;
+		switch (unit.$) {
+			case 'Years':
+				return ((($justinmimbs$date$Date$toMonths(rd2) - $justinmimbs$date$Date$toMonths(rd1)) | 0) / 12) | 0;
+			case 'Months':
+				return ($justinmimbs$date$Date$toMonths(rd2) - $justinmimbs$date$Date$toMonths(rd1)) | 0;
+			case 'Weeks':
+				return ((rd2 - rd1) / 7) | 0;
+			default:
+				return rd2 - rd1;
+		}
+	});
+var $elm$core$Basics$clamp = F3(
+	function (low, high, number) {
+		return (_Utils_cmp(number, low) < 0) ? low : ((_Utils_cmp(number, high) > 0) ? high : number);
+	});
+var $justinmimbs$date$Date$fromCalendarDate = F3(
+	function (y, m, d) {
+		return $justinmimbs$date$Date$RD(
+			($justinmimbs$date$Date$daysBeforeYear(y) + A2($justinmimbs$date$Date$daysBeforeMonth, y, m)) + A3(
+				$elm$core$Basics$clamp,
+				1,
+				A2($justinmimbs$date$Date$daysInMonth, y, m),
+				d));
 	});
 var $author$project$CalendarGenerator$getEndOfWeek = function (startOfWeek) {
 	switch (startOfWeek.$) {
@@ -6336,8 +6399,6 @@ var $author$project$CalendarGenerator$generateMonthList = F3(
 	});
 var $elm$virtual_dom$VirtualDom$map = _VirtualDom_map;
 var $elm$html$Html$map = $elm$virtual_dom$VirtualDom$map;
-var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
-var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $author$project$CalendarGenerator$monthToString = function (month) {
 	switch (month.$) {
 		case 'Jan':
@@ -6366,15 +6427,13 @@ var $author$project$CalendarGenerator$monthToString = function (month) {
 			return 'Dec';
 	}
 };
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $author$project$CalendarGenerator$viewMonthHeader = F2(
 	function (month, year) {
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('text-center font-mono text-sm uppercase mb-3')
+					$elm$html$Html$Attributes$class('text-center text-sm uppercase mb-3')
 				]),
 			_List_fromArray(
 				[
@@ -6387,10 +6446,7 @@ var $author$project$CalendarGenerator$ClickedDate = function (a) {
 };
 var $author$project$CalendarGenerator$dateBoxStyle = _List_fromArray(
 	[
-		$elm$html$Html$Attributes$class('date-box inline-flex items-center justify-center font-mono text-sm'),
-		A2($elm$html$Html$Attributes$style, 'height', '32px'),
-		A2($elm$html$Html$Attributes$style, 'width', '32px'),
-		A2($elm$html$Html$Attributes$style, 'font-', 'monospace')
+		$elm$html$Html$Attributes$class('date-box inline-flex items-center justify-center text-sm p-1')
 	]);
 var $justinmimbs$date$Date$day = A2(
 	$elm$core$Basics$composeR,
@@ -6407,17 +6463,6 @@ var $elm$core$Maybe$map = F2(
 		} else {
 			return $elm$core$Maybe$Nothing;
 		}
-	});
-var $elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 'Normal', a: a};
-};
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
-var $elm$html$Html$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$Normal(decoder));
 	});
 var $elm$html$Html$Events$onClick = function (msg) {
 	return A2(
@@ -6454,7 +6499,7 @@ var $author$project$CalendarGenerator$viewDate = F3(
 				maybeDate));
 		var dateAsString = function () {
 			if (maybeDate.$ === 'Nothing') {
-				return '-';
+				return ' ';
 			} else {
 				var d = maybeDate.a;
 				return $elm$core$String$fromInt(
@@ -6467,11 +6512,11 @@ var $author$project$CalendarGenerator$viewDate = F3(
 				$author$project$CalendarGenerator$dateBoxStyle,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$class('date'),
+						$elm$html$Html$Attributes$class('date border border-transparent'),
 						$elm$html$Html$Attributes$class(
-						isLwDate ? 'text-green-500' : ''),
+						isPh ? 'border border-green-500' : ''),
 						$elm$html$Html$Attributes$class(
-						isPh ? 'text-red-600' : ''),
+						isLwDate ? 'text-green-800 bg-green-50' : ''),
 						$elm$html$Html$Events$onClick(
 						$author$project$CalendarGenerator$ClickedDate(maybeDate))
 					])),
@@ -6480,21 +6525,32 @@ var $author$project$CalendarGenerator$viewDate = F3(
 					$elm$html$Html$text(dateAsString)
 				]));
 	});
+var $author$project$CalendarGenerator$weekDivStyle = _List_fromArray(
+	[
+		$elm$html$Html$Attributes$class('week'),
+		A2($elm$html$Html$Attributes$style, 'display', 'grid'),
+		A2($elm$html$Html$Attributes$style, 'grid-auto-flow', 'column'),
+		A2($elm$html$Html$Attributes$style, 'grid-template-columns', 'repeat(7, 1fr)')
+	]);
 var $author$project$CalendarGenerator$viewWeek = F3(
 	function (phs, lws, week) {
 		return A2(
 			$elm$html$Html$div,
-			_List_Nil,
+			$author$project$CalendarGenerator$weekDivStyle,
 			A2(
 				$elm$core$List$map,
 				A2($author$project$CalendarGenerator$viewDate, phs, lws),
 				week));
 	});
-var $author$project$CalendarGenerator$weekDivStyle = _List_fromArray(
-	[
-		$elm$html$Html$Attributes$class('week')
-	]);
-var $author$project$CalendarGenerator$viewWeekHeader = function () {
+var $author$project$CalendarGenerator$viewWeekHeader = function (startOfWeek) {
+	var startOfWeekAsNumber = $justinmimbs$date$Date$weekdayToNumber(startOfWeek);
+	var weekdayNumberRange = A2(
+		$elm$core$List$map,
+		A2(
+			$elm$core$Basics$composeR,
+			$elm$core$Basics$modBy(7),
+			$elm$core$Basics$add(1)),
+		A2($elm$core$List$range, startOfWeekAsNumber - 1, startOfWeekAsNumber + 5));
 	var span = function (text) {
 		return A2(
 			$elm$html$Html$span,
@@ -6533,9 +6589,8 @@ var $author$project$CalendarGenerator$viewWeekHeader = function () {
 		A2(
 			$elm$core$List$map,
 			toSpan,
-			_List_fromArray(
-				[$elm$time$Time$Sun, $elm$time$Time$Mon, $elm$time$Time$Tue, $elm$time$Time$Wed, $elm$time$Time$Thu, $elm$time$Time$Fri, $elm$time$Time$Sat])));
-}();
+			A2($elm$core$List$map, $justinmimbs$date$Date$numberToWeekday, weekdayNumberRange)));
+};
 var $author$project$CalendarGenerator$viewMonth = F6(
 	function (toMsg, phs, lws, month, startOfWeek, year) {
 		var listOfWeeks = A3($author$project$CalendarGenerator$generateMonthList, month, year, startOfWeek);
@@ -6546,14 +6601,13 @@ var $author$project$CalendarGenerator$viewMonth = F6(
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						A2($elm$html$Html$Attributes$style, 'width', 'calc(32px * 7)'),
 						$elm$html$Html$Attributes$class('mb-5')
 					]),
 				_Utils_ap(
 					_List_fromArray(
 						[
 							A2($author$project$CalendarGenerator$viewMonthHeader, month, year),
-							$author$project$CalendarGenerator$viewWeekHeader
+							$author$project$CalendarGenerator$viewWeekHeader(startOfWeek)
 						]),
 					A2(
 						$elm$core$List$map,
@@ -6566,7 +6620,12 @@ var $author$project$Main$viewYear = F3(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('grid')
+					$elm$html$Html$Attributes$class('calendar'),
+					A2($elm$html$Html$Attributes$style, 'display', 'grid'),
+					A2($elm$html$Html$Attributes$style, 'grid-auto-flow', 'row'),
+					A2($elm$html$Html$Attributes$style, 'grid-template-columns', 'repeat(4, 1fr)'),
+					A2($elm$html$Html$Attributes$style, 'grid-template-rows', 'repeat(3, auto)'),
+					A2($elm$html$Html$Attributes$style, 'grid-gap', '3rem')
 				]),
 			A2(
 				$elm$core$List$map,
@@ -6578,22 +6637,168 @@ var $author$project$Main$viewYear = F3(
 var $author$project$Main$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
-		_List_Nil,
 		_List_fromArray(
 			[
-				A3(
-				$author$project$Main$viewYear,
-				2021,
-				model.publicHolidays,
+				A2($elm$html$Html$Attributes$style, 'display', 'grid'),
+				A2($elm$html$Html$Attributes$style, 'grid-auto-flow', 'column'),
+				A2($elm$html$Html$Attributes$style, 'grid-template-columns', 'repeat(2, auto)'),
+				A2($elm$html$Html$Attributes$style, 'grid-gap', '5rem'),
+				$elm$html$Html$Attributes$class('p-10')
+			]),
+		_List_fromArray(
+			[
 				A2(
-					$elm$core$List$map,
-					function ($) {
-						return $.date;
-					},
-					$elm$core$List$concat(model.longWeekends)))
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('flex flex-col gap-10')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$div,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('1. Click on a date to mark it as a public holiday')
+											]))
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('mb-1')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text('2. Select year')
+											])),
+										A2(
+										$elm$html$Html$input,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('border p-1 rounded'),
+												$elm$html$Html$Events$onInput($author$project$Main$UpdateYear),
+												$elm$html$Html$Attributes$type_('number'),
+												$elm$html$Html$Attributes$value(model.year)
+											]),
+										_List_Nil)
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('mb-1')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text('3. Number of time-offs you are willing to take*')
+											])),
+										A2(
+										$elm$html$Html$input,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$type_('number'),
+												$elm$html$Html$Attributes$class('border p-1 rounded'),
+												$elm$html$Html$Attributes$value(
+												$elm$core$String$fromInt(model.numberOfForcedLeaves)),
+												$elm$html$Html$Events$onInput(
+												A2(
+													$elm$core$Basics$composeR,
+													$elm$core$String$toInt,
+													A2(
+														$elm$core$Basics$composeR,
+														$elm$core$Maybe$withDefault(0),
+														$author$project$Main$UpdateForcedLeaves)))
+											]),
+										_List_Nil),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('text-sm mt-2')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text('* For eg, if a public holiday falls on Thursday, you might be willing to take the Friday off just to get a longer weekend! In this case, you are willing to take 1 time-off and you would put 1 as the value.')
+											]))
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$input,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$id('non-weekends-toggle'),
+												$elm$html$Html$Attributes$type_('checkbox'),
+												$elm$html$Html$Attributes$class('cursor-pointer'),
+												$elm$html$Html$Attributes$checked(model.showNonWeekendsToo),
+												$elm$html$Html$Events$onCheck($author$project$Main$ToggleNonWeekends)
+											]),
+										_List_Nil),
+										A2(
+										$elm$html$Html$label,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('cursor-pointer ml-1'),
+												$elm$html$Html$Attributes$for('non-weekends-toggle')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Show non-weekend possibilities too')
+											]))
+									]))
+							]))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('p-4')
+					]),
+				_List_fromArray(
+					[
+						A3(
+						$author$project$Main$viewYear,
+						A2(
+							$elm$core$Maybe$withDefault,
+							2021,
+							$elm$core$String$toInt(model.year)),
+						model.publicHolidays,
+						$elm$core$List$concat(model.longWeekends))
+					]))
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
 	{init: $author$project$Main$init, subscriptions: $author$project$Main$subscriptions, update: $author$project$Main$update, view: $author$project$Main$view});
 _Platform_export({'Main':{'init':$author$project$Main$main(
-	$elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});}(this));
+	A2(
+		$elm$json$Json$Decode$andThen,
+		function (year) {
+			return $elm$json$Json$Decode$succeed(
+				{year: year});
+		},
+		A2($elm$json$Json$Decode$field, 'year', $elm$json$Json$Decode$int)))(0)}});}(this));

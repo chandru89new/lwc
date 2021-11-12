@@ -101,11 +101,10 @@ viewMonth toMsg phs lws month startOfWeek year =
     in
     H.map toMsg
         (H.div
-            [ Attr.style "width" "calc(32px * 7)"
-            , Attr.class "mb-5"
+            [ Attr.class "mb-5"
             ]
             ([ viewMonthHeader month year
-             , viewWeekHeader
+             , viewWeekHeader startOfWeek
              ]
                 ++ List.map (viewWeek phs lws) listOfWeeks
             )
@@ -114,7 +113,7 @@ viewMonth toMsg phs lws month startOfWeek year =
 
 viewWeek : List PublicHoliday -> List HighlightDate -> List (Maybe Date.Date) -> H.Html Msg
 viewWeek phs lws week =
-    H.div []
+    H.div weekDivStyle
         (List.map
             (viewDate
                 phs
@@ -130,7 +129,7 @@ viewDate phs lwds maybeDate =
         dateAsString =
             case maybeDate of
                 Nothing ->
-                    "-"
+                    " "
 
                 Just d ->
                     String.fromInt <| Date.day d
@@ -143,17 +142,17 @@ viewDate phs lwds maybeDate =
     in
     H.span
         (dateBoxStyle
-            ++ [ Attr.class "date"
+            ++ [ Attr.class "date border border-transparent"
                , Attr.class
-                    (if isLwDate then
-                        "text-green-500"
+                    (if isPh then
+                        "border border-green-500"
 
                      else
                         ""
                     )
                , Attr.class
-                    (if isPh then
-                        "text-red-600"
+                    (if isLwDate then
+                        "text-green-800 bg-green-50"
 
                      else
                         ""
@@ -165,9 +164,16 @@ viewDate phs lwds maybeDate =
         [ H.text dateAsString ]
 
 
-viewWeekHeader : H.Html a
-viewWeekHeader =
+viewWeekHeader : Time.Weekday -> H.Html a
+viewWeekHeader startOfWeek =
     let
+        startOfWeekAsNumber =
+            Date.weekdayToNumber startOfWeek
+
+        weekdayNumberRange =
+            List.range (startOfWeekAsNumber - 1) (startOfWeekAsNumber + 5)
+                |> List.map (modBy 7 >> (+) 1)
+
         span text =
             H.span
                 (dateBoxStyle
@@ -202,26 +208,29 @@ viewWeekHeader =
     H.div weekDivStyle
         (List.map
             toSpan
-            [ Time.Sun, Time.Mon, Time.Tue, Time.Wed, Time.Thu, Time.Fri, Time.Sat ]
+            (List.map Date.numberToWeekday weekdayNumberRange)
         )
 
 
 weekDivStyle =
-    [ Attr.class "week" ]
+    [ Attr.class "week"
+    , Attr.style "display" "grid"
+    , Attr.style "grid-auto-flow" "column"
+    , Attr.style "grid-template-columns" "repeat(7, 1fr)"
+    ]
 
 
 dateBoxStyle =
-    [ Attr.class "date-box inline-flex items-center justify-center font-mono text-sm"
-    , Attr.style "height" "32px"
-    , Attr.style "width" "32px"
-    , Attr.style "font-" "monospace"
+    [ Attr.class "date-box inline-flex items-center justify-center text-sm p-1"
+
+    -- , Attr.style "height" "32px"
     ]
 
 
 viewMonthHeader : Time.Month -> Year -> H.Html a
 viewMonthHeader month year =
     H.div
-        [ Attr.class "text-center font-mono text-sm uppercase mb-3"
+        [ Attr.class "text-center text-sm uppercase mb-3"
         ]
         [ H.text (monthToString month ++ " " ++ String.fromInt year) ]
 

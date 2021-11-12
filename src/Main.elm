@@ -6,6 +6,7 @@ import CalendarGenerator as C
 import Date
 import Html as H
 import Html.Attributes as Attr
+import Html.Events as Ev
 import Task
 import Time
 
@@ -20,38 +21,24 @@ main =
 
 
 type alias Model =
-    { calendarDays : List CD.CalendarDate
+    { year : String
     , publicHolidays : List Date.Date
     , weekendDays : List Time.Weekday
-    , longWeekends : List (List CD.CalendarDate)
+    , longWeekends : List (List Date.Date)
     , numberOfForcedLeaves : Int
+    , showNonWeekendsToo : Bool
     }
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
-    let
-        year =
-            2021
-
-        startDate =
-            Date.fromCalendarDate year Time.Jan 1
-
-        endDate =
-            Date.fromCalendarDate (year + 1) Time.Jan 1
-    in
+init : { year : Int } -> ( Model, Cmd Msg )
+init { year } =
     ( Model
-        (CD.generateCalendarDays startDate endDate [] CD.weekends_ [])
-        [ Date.fromCalendarDate 2021 Time.Jan 26
-        , Date.fromCalendarDate 2021 Time.Apr 14
-        , Date.fromCalendarDate 2021 Time.Aug 15
-        , Date.fromCalendarDate 2021 Time.Oct 2
-        , Date.fromCalendarDate 2021 Time.Nov 4
-        , Date.fromCalendarDate 2021 Time.Dec 25
-        ]
+        (String.fromInt year)
+        []
         CD.weekends_
         []
-        1
+        2
+        True
     , Task.perform (\_ -> GenerateLongWeekends) (Task.succeed 1)
     )
 
@@ -59,6 +46,9 @@ init _ =
 type Msg
     = NoOp
     | GenerateLongWeekends
+    | UpdateForcedLeaves Int
+    | UpdateYear String
+    | ToggleNonWeekends Bool
     | CMsg C.Msg
 
 
@@ -68,25 +58,134 @@ update msg model =
         NoOp ->
             ( model, Cmd.none )
 
+        UpdateForcedLeaves int ->
+            update GenerateLongWeekends
+                { model
+                    | numberOfForcedLeaves =
+                        if int < 0 then
+                            0
+
+                        else
+                            int
+                }
+
+        UpdateYear str ->
+            update GenerateLongWeekends
+                { model
+                    | year =
+                        String.trim str
+                }
+
+        ToggleNonWeekends bool ->
+            update GenerateLongWeekends { model | showNonWeekendsToo = bool }
+
         GenerateLongWeekends ->
             let
                 longWeekendsList =
-                    List.map (\date -> CD.getLeaveRangesFromDate model.calendarDays model.publicHolidays model.weekendDays date model.numberOfForcedLeaves |> CD.getItemWithMaxLength) model.publicHolidays
+                    List.map (\date -> CD.getLeaveRangesFromDate model.publicHolidays model.weekendDays date model.numberOfForcedLeaves |> CD.getItemWithMaxLength) model.publicHolidays
+
+                lwdFilteredForWeekends =
+                    if model.showNonWeekendsToo then
+                        longWeekendsList
+
+                    else
+                        List.filter hasWeekendsInIt longWeekendsList
+
+                hasWeekendsInIt : List Date.Date -> Bool
+                hasWeekendsInIt list =
+                    List.any (\date -> List.any (\wd -> wd == Date.weekday date) model.weekendDays) list
             in
-            ( { model | longWeekends = longWeekendsList }, Cmd.none )
+            ( { model | longWeekends = lwdFilteredForWeekends }, Cmd.none )
 
         CMsg cmsg ->
-            let
-                _ =
-                    Debug.log "cmsg" cmsg
-            in
-            ( model, Cmd.none )
+            case cmsg of
+                C.ClickedDate date ->
+                    case date of
+                        Nothing ->
+                            ( model, Cmd.none )
+
+                        Just d ->
+                            let
+                                newPhList =
+                                    if List.any ((==) d) model.publicHolidays then
+                                        List.filter ((/=) d) model.publicHolidays
+
+                                    else
+                                        d :: model.publicHolidays
+                            in
+                            update GenerateLongWeekends
+                                { model
+                                    | publicHolidays = newPhList
+                                }
 
 
 view : Model -> H.Html Msg
 view model =
-    H.div []
-        [ viewYear 2021 model.publicHolidays (List.concat model.longWeekends |> List.map .date)
+    H.div
+        [ Attr.style "display" "grid"
+        , Attr.style "grid-auto-flow" "column"
+        , Attr.style "grid-template-columns" "repeat(2, auto)"
+        , Attr.style "grid-gap" "5rem"
+        , Attr.class "p-10"
+        ]
+        [ H.div
+            []
+            [ H.div [ Attr.class "flex flex-col gap-10" ]
+                [ H.div []
+                    [ H.div
+                        []
+                        [ H.text "1. Click on a date to mark it as a public holiday"
+                        ]
+                    ]
+                , H.div []
+                    [ H.div [ Attr.class "mb-1" ] [ H.text "2. Select year" ]
+                    , H.input
+                        [ Attr.class "border p-1 rounded"
+                        , Ev.onInput UpdateYear
+                        , Attr.type_ "number"
+                        , Attr.value
+                            model.year
+                        ]
+                        []
+                    ]
+                , H.div []
+                    [ H.div
+                        [ Attr.class "mb-1"
+                        ]
+                        [ H.text "3. Number of time-offs you are willing to take*" ]
+                    , H.input
+                        [ Attr.type_ "number"
+                        , Attr.class "border p-1 rounded"
+                        , Attr.value
+                            (String.fromInt model.numberOfForcedLeaves)
+                        , Ev.onInput (String.toInt >> Maybe.withDefault 0 >> UpdateForcedLeaves)
+                        ]
+                        []
+                    , H.div [ Attr.class "text-sm mt-2" ]
+                        [ H.text "* For eg, if a public holiday falls on Thursday, you might be willing to take the Friday off just to get a longer weekend! In this case, you are willing to take 1 time-off and you would put 1 as the value." ]
+                    ]
+                , H.div []
+                    [ H.input
+                        [ Attr.id "non-weekends-toggle"
+                        , Attr.type_ "checkbox"
+                        , Attr.class "cursor-pointer"
+                        , Attr.checked model.showNonWeekendsToo
+                        , Ev.onCheck ToggleNonWeekends
+                        ]
+                        []
+                    , H.label
+                        [ Attr.class "cursor-pointer ml-1"
+                        , Attr.for "non-weekends-toggle"
+                        ]
+                        [ H.text "Show non-weekend possibilities too"
+                        ]
+                    ]
+                ]
+            ]
+        , H.div
+            [ Attr.class "p-4"
+            ]
+            [ viewYear (model.year |> String.toInt |> Maybe.withDefault 2021) model.publicHolidays (List.concat model.longWeekends) ]
         ]
 
 
@@ -110,7 +209,12 @@ subscriptions _ =
 viewYear : Int -> List C.PublicHoliday -> List C.HighlightDate -> H.Html Msg
 viewYear year phs lws =
     H.div
-        [ Attr.class "grid"
+        [ Attr.class "calendar"
+        , Attr.style "display" "grid"
+        , Attr.style "grid-auto-flow" "row"
+        , Attr.style "grid-template-columns" "repeat(4, 1fr)"
+        , Attr.style "grid-template-rows" "repeat(3, auto)"
+        , Attr.style "grid-gap" "3rem"
         ]
         (List.map
             (\month -> C.viewMonth CMsg phs lws month Time.Sun year)
