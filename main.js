@@ -6516,7 +6516,7 @@ var $author$project$CalendarGenerator$viewDate = F3(
 						$elm$html$Html$Attributes$class(
 						isPh ? 'border border-green-500' : ''),
 						$elm$html$Html$Attributes$class(
-						isLwDate ? 'text-green-800 bg-green-50' : ''),
+						isLwDate ? 'text-green-800 bg-green-100' : ''),
 						$elm$html$Html$Events$onClick(
 						$author$project$CalendarGenerator$ClickedDate(maybeDate))
 					])),

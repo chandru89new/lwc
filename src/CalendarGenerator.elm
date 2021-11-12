@@ -152,7 +152,7 @@ viewDate phs lwds maybeDate =
                     )
                , Attr.class
                     (if isLwDate then
-                        "text-green-800 bg-green-50"
+                        "text-green-800 bg-green-100"
 
                      else
                         ""
