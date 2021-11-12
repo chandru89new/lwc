@@ -4,7 +4,7 @@ import Date
 import Html as H
 import Html.Attributes as Attr
 import Html.Events as Ev
-import List.Extra
+import List.Extra as List
 import Time
 
 
@@ -88,7 +88,7 @@ generateMonthList month year startOfWeek =
             List.repeat padLeftAmount Nothing ++ List.map Just (Date.range Date.Day 1 startDateOfMonth (Date.add Date.Days 1 endDateOfMonth)) ++ List.repeat padRightAmount Nothing
 
         result =
-            List.Extra.groupsOf 7 datesAsListofMaybes
+            List.groupsOf 7 datesAsListofMaybes
     in
     result
 

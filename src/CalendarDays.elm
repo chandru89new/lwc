@@ -1,7 +1,7 @@
 module CalendarDays exposing (..)
 
 import Date
-import List.Extra
+import List.Extra as List
 import Time
 
 
@@ -82,7 +82,7 @@ getLeaveRangesFromDate publicHolidays weekend_ date int =
         sortedUnique ( b, f ) =
             traverseBackwards publicHolidays weekend_ date b
                 ++ traverseForwards publicHolidays weekend_ date f
-                |> List.Extra.unique
+                |> List.unique
                 |> List.sortWith Date.compare
 
         recGetLeaveRangeFromDate : List (List Date.Date) -> Date.Date -> ( Int, Int ) -> List (List Date.Date)
@@ -99,7 +99,7 @@ getLeaveRangesFromDate publicHolidays weekend_ date int =
 getItemWithMaxLength : List (List a) -> List a
 getItemWithMaxLength list =
     Maybe.withDefault []
-        (List.Extra.maximumWith
+        (List.maximumWith
             (\a b ->
                 if List.length a >= List.length b then
                     GT
