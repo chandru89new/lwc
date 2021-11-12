@@ -1,4 +1,4 @@
-module Main exposing (..)
+port module Main exposing (..)
 
 import Browser
 import CalendarDays as CD
@@ -7,6 +7,7 @@ import Date
 import Html as H
 import Html.Attributes as Attr
 import Html.Events as Ev
+import Json.Encode as Encoder
 import Task
 import Time
 
@@ -30,11 +31,16 @@ type alias Model =
     }
 
 
-init : { year : Int } -> ( Model, Cmd Msg )
-init { year } =
+init : { year : Int, initPublicHolidays : List String } -> ( Model, Cmd Msg )
+init { year, initPublicHolidays } =
     ( Model
         (String.fromInt year)
-        []
+        (List.map (changeYear year)
+            (List.filterMap
+                (Date.fromIsoString >> Result.toMaybe)
+                initPublicHolidays
+            )
+        )
         CD.weekends_
         []
         2
@@ -70,10 +76,18 @@ update msg model =
                 }
 
         UpdateYear str ->
+            let
+                year =
+                    str |> (String.toInt >> Maybe.withDefault 2021)
+
+                newPh =
+                    List.map (changeYear year) model.publicHolidays
+            in
             update GenerateLongWeekends
                 { model
                     | year =
                         String.trim str
+                    , publicHolidays = newPh
                 }
 
         ToggleNonWeekends bool ->
@@ -95,7 +109,7 @@ update msg model =
                 hasWeekendsInIt list =
                     List.any (\date -> List.any (\wd -> wd == Date.weekday date) model.weekendDays) list
             in
-            ( { model | longWeekends = lwdFilteredForWeekends }, Cmd.none )
+            ( { model | longWeekends = lwdFilteredForWeekends }, saveToStorage (Encoder.encode 0 (Encoder.list Encoder.string (List.map Date.toIsoString model.publicHolidays))) )
 
         CMsg cmsg ->
             case cmsg of
@@ -246,7 +260,7 @@ viewLegend =
         , H.div [ Attr.class "flex items-center" ]
             [ H.span
                 (List.map (\( a, b ) -> Attr.style a b) [ ( "width", "16px" ), ( "height", "16px" ) ]
-                    ++ [ Attr.class "bg-green-100 inline-block"
+                    ++ [ Attr.class "bg-green-200 inline-block"
                        ]
                 )
                 []
@@ -255,10 +269,18 @@ viewLegend =
         , H.div [ Attr.class "mt-2 flex items-center" ]
             [ H.span
                 (List.map (\( a, b ) -> Attr.style a b) [ ( "width", "16px" ), ( "height", "16px" ) ]
-                    ++ [ Attr.class "border border-green-100 inline-block"
+                    ++ [ Attr.class "border border-green-500 inline-block"
                        ]
                 )
                 []
             , H.span [ Attr.class "ml-2 text-xs" ] [ H.text "Day marked as public holiday" ]
             ]
         ]
+
+
+port saveToStorage : String -> Cmd msg
+
+
+changeYear : Int -> Date.Date -> Date.Date
+changeYear year date =
+    Date.fromCalendarDate year (Date.month date) (Date.day date)

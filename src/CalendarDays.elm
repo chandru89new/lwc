@@ -12,48 +12,7 @@ type alias CalendarDate =
     }
 
 
-generateCalendarDays : Date.Date -> Date.Date -> List Date.Date -> List Time.Weekday -> List CalendarDate -> List CalendarDate
-generateCalendarDays start end holidays weekendDays result =
-    let
-        startPlusOneDay =
-            Date.add Date.Days 1 start
-
-        endLoop =
-            Date.diff Date.Days start end == 0
-    in
-    if endLoop then
-        result
-
-    else
-        let
-            newResult =
-                result
-                    ++ [ CalendarDate
-                            start
-                            (List.any (\date -> date == start) holidays)
-                            (List.any ((==) (Date.weekday start)) weekendDays)
-                       ]
-        in
-        generateCalendarDays startPlusOneDay end holidays weekendDays newResult
-
-
-minusOneDay : Date.Date -> Date.Date
-minusOneDay =
-    Date.add Date.Days -1
-
-
-toCalDate : List Date.Date -> List Time.Weekday -> Date.Date -> CalendarDate
-toCalDate ph weekends date_ =
-    CalendarDate
-        date_
-        (List.any (\date -> date == date_) ph)
-        (List.any ((==) (Date.weekday date_)) weekends)
-
-
-
--- isHoliday : List Date.Date -> List Time.weekday -> Date.Date -> Bool
-
-
+isHoliday : List Date.Date -> List Time.Weekday -> Date.Date -> Bool
 isHoliday phs weekends date =
     List.any ((==) date) phs || List.any ((==) (Date.weekday date)) weekends
 
