@@ -7401,6 +7401,7 @@ var $elm$core$List$concat = function (lists) {
 };
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$Attributes$for = $elm$html$Html$Attributes$stringProperty('htmlFor');
+var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$html$Html$label = _VirtualDom_node('label');
@@ -8218,7 +8219,7 @@ var $author$project$Main$view = function (model) {
 			[
 				A2($elm$html$Html$Attributes$style, 'display', 'grid'),
 				A2($elm$html$Html$Attributes$style, 'grid-auto-flow', 'column'),
-				A2($elm$html$Html$Attributes$style, 'grid-template-columns', 'repeat(2, auto)'),
+				A2($elm$html$Html$Attributes$style, 'grid-template-columns', 'repeat(2, minmax(400px, 500px))'),
 				A2($elm$html$Html$Attributes$style, 'grid-gap', '5rem'),
 				$elm$html$Html$Attributes$class('p-10')
 			]),
@@ -8237,6 +8238,16 @@ var $author$project$Main$view = function (model) {
 							]),
 						_List_fromArray(
 							[
+								A2(
+								$elm$html$Html$h1,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('text-xl text-green-600 border-b pb-2 border-green-200')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Long-weekend calculator')
+									])),
 								A2(
 								$elm$html$Html$div,
 								_List_Nil,
@@ -8359,7 +8370,7 @@ var $author$project$Main$view = function (model) {
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$class('p-4')
+						$elm$html$Html$Attributes$class('p-10')
 					]),
 				_List_fromArray(
 					[

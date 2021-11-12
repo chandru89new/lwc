@@ -138,14 +138,18 @@ view model =
     H.div
         [ Attr.style "display" "grid"
         , Attr.style "grid-auto-flow" "column"
-        , Attr.style "grid-template-columns" "repeat(2, auto)"
+        , Attr.style "grid-template-columns" "repeat(2, minmax(400px, 500px))"
         , Attr.style "grid-gap" "5rem"
         , Attr.class "p-10"
         ]
         [ H.div
             []
             [ H.div [ Attr.class "flex flex-col gap-10" ]
-                [ H.div []
+                [ H.h1
+                    [ Attr.class "text-xl text-green-600 border-b pb-2 border-green-200"
+                    ]
+                    [ H.text "Long-weekend calculator" ]
+                , H.div []
                     [ H.div
                         []
                         [ H.text "1. Click on a date to mark it as a public holiday"
@@ -198,7 +202,7 @@ view model =
                 ]
             ]
         , H.div
-            [ Attr.class "p-4"
+            [ Attr.class "p-10"
             ]
             [ viewYear (model.year |> String.toInt |> Maybe.withDefault 2021) model.publicHolidays (List.concat model.longWeekends) ]
         ]
