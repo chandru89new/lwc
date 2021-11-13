@@ -54,6 +54,7 @@ type Msg
     | GenerateLongWeekends
     | UpdateForcedLeaves Int
     | UpdateYear String
+    | SaveHolidays
     | ToggleNonWeekends Bool
     | CMsg C.Msg
 
@@ -109,7 +110,15 @@ update msg model =
                 hasWeekendsInIt list =
                     List.any (\date -> List.any (\wd -> wd == Date.weekday date) model.weekendDays) list
             in
-            ( { model | longWeekends = lwdFilteredForWeekends }, saveToStorage (Encoder.encode 0 (Encoder.list Encoder.string (List.map Date.toIsoString model.publicHolidays))) )
+            ( { model | longWeekends = lwdFilteredForWeekends }, Cmd.none )
+
+        SaveHolidays ->
+            ( model
+            , Cmd.batch
+                [ saveToStorage (Encoder.encode 0 (Encoder.list Encoder.string (List.map Date.toIsoString model.publicHolidays)))
+                , Task.perform (\_ -> GenerateLongWeekends) (Task.succeed Nothing)
+                ]
+            )
 
         CMsg cmsg ->
             case cmsg of
@@ -127,7 +136,7 @@ update msg model =
                                     else
                                         d :: model.publicHolidays
                             in
-                            update GenerateLongWeekends
+                            update SaveHolidays
                                 { model
                                     | publicHolidays = newPhList
                                 }
