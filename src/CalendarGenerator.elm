@@ -180,28 +180,8 @@ viewWeekHeader startOfWeek =
                 )
                 [ H.text text ]
 
-        toSpan weekday =
-            case weekday of
-                Time.Mon ->
-                    span "M"
-
-                Time.Tue ->
-                    span "T"
-
-                Time.Wed ->
-                    span "W"
-
-                Time.Thu ->
-                    span "T"
-
-                Time.Fri ->
-                    span "F"
-
-                Time.Sat ->
-                    span "S"
-
-                Time.Sun ->
-                    span "S"
+        toSpan =
+            weekdayToSingleCharacter >> span
     in
     H.div weekDivStyle
         (List.map
@@ -279,3 +259,28 @@ type alias Year =
 
 type alias HighlightDate =
     Date.Date
+
+
+weekdayToSingleCharacter : Time.Weekday -> String
+weekdayToSingleCharacter weekday =
+    case weekday of
+        Time.Mon ->
+            "M"
+
+        Time.Tue ->
+            "T"
+
+        Time.Wed ->
+            "W"
+
+        Time.Thu ->
+            "T"
+
+        Time.Fri ->
+            "F"
+
+        Time.Sat ->
+            "S"
+
+        Time.Sun ->
+            "S"

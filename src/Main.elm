@@ -56,6 +56,7 @@ type Msg
     | UpdateYear String
     | SaveHolidays
     | ToggleNonWeekends Bool
+    | ToggleWeekendDays Time.Weekday Bool
     | CMsg C.Msg
 
 
@@ -119,6 +120,17 @@ update msg model =
                 , Task.perform (\_ -> GenerateLongWeekends) (Task.succeed Nothing)
                 ]
             )
+
+        ToggleWeekendDays weekday checked ->
+            let
+                newWeekendDays =
+                    if checked then
+                        weekday :: model.weekendDays
+
+                    else
+                        List.filter ((/=) weekday) model.weekendDays
+            in
+            update GenerateLongWeekends { model | weekendDays = newWeekendDays }
 
         CMsg cmsg ->
             case cmsg of
@@ -206,6 +218,11 @@ view model =
                         ]
                         [ H.text "Show non-weekend possibilities too"
                         ]
+                    ]
+                , H.div []
+                    [ H.div []
+                        [ H.text "Weekends" ]
+                    , viewWeekendSelector model.weekendDays
                     ]
                 , H.div [] [ viewLegend ]
                 ]
@@ -297,3 +314,40 @@ port saveToStorage : String -> Cmd msg
 changeYear : Int -> Date.Date -> Date.Date
 changeYear year date =
     Date.fromCalendarDate year (Date.month date) (Date.day date)
+
+
+viewWeekendSelector : List Time.Weekday -> H.Html Msg
+viewWeekendSelector weekends =
+    let
+        weekdays =
+            [ Time.Mon
+            , Time.Tue
+            , Time.Wed
+            , Time.Thu
+            , Time.Fri
+            , Time.Sat
+            , Time.Sun
+            ]
+
+        renderCheckbox : List Time.Weekday -> Time.Weekday -> H.Html Msg
+        renderCheckbox selectedWeekends weekday =
+            H.span [ Attr.class "inline-block mr-3" ]
+                [ H.input
+                    [ Attr.type_ "checkbox"
+                    , Attr.id ("checkbox-" ++ C.weekdayToSingleCharacter weekday)
+                    , Attr.checked (List.member weekday selectedWeekends)
+                    , Ev.onCheck (ToggleWeekendDays weekday)
+                    ]
+                    []
+                , H.label
+                    [ Attr.class "ml-1"
+                    , Attr.for ("checkbox-" ++ C.weekdayToSingleCharacter weekday)
+                    ]
+                    [ H.text <| C.weekdayToSingleCharacter weekday ]
+                ]
+    in
+    H.div []
+        (List.map
+            (renderCheckbox weekends)
+            weekdays
+        )
