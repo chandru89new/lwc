@@ -236,7 +236,7 @@ viewYear year phs lws =
         , Attr.style "grid-gap" "3rem"
         ]
         (List.map
-            (\month -> C.viewMonth CMsg phs lws month Time.Sun year)
+            (\month -> C.viewMonth phs lws month Time.Sun year |> H.map CMsg)
             months
         )
 

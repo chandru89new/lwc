@@ -93,21 +93,19 @@ generateMonthList month year startOfWeek =
     result
 
 
-viewMonth : (Msg -> msg) -> List PublicHoliday -> List HighlightDate -> Time.Month -> Time.Weekday -> Int -> H.Html msg
-viewMonth toMsg phs lws month startOfWeek year =
+viewMonth : List PublicHoliday -> List HighlightDate -> Time.Month -> Time.Weekday -> Int -> H.Html Msg
+viewMonth phs lws month startOfWeek year =
     let
         listOfWeeks =
             generateMonthList month year startOfWeek
     in
-    H.map toMsg
-        (H.div
-            [ Attr.class "mb-5"
-            ]
-            ([ viewMonthHeader month year
-             , viewWeekHeader startOfWeek
-             ]
-                ++ List.map (viewWeek phs lws) listOfWeeks
-            )
+    H.div
+        [ Attr.class "mb-5"
+        ]
+        ([ viewMonthHeader month year
+         , viewWeekHeader startOfWeek
+         ]
+            ++ List.map (viewWeek phs lws) listOfWeeks
         )
 
 
