@@ -159,12 +159,11 @@ view model =
     H.div
         [ Attr.style "display" "grid"
         , Attr.style "grid-auto-flow" "column"
-        , Attr.style "grid-template-columns" "repeat(2, minmax(400px, 500px))"
+        , Attr.style "grid-template-columns" "1fr 3fr"
         , Attr.style "grid-gap" "5rem"
-        , Attr.class "p-10"
         ]
         [ H.div
-            []
+            [ Attr.class "p-10" ]
             [ H.div [ Attr.class "flex flex-col gap-10" ]
                 [ H.h1
                     [ Attr.class "text-xl text-green-600 border-b pb-2 border-green-200"
@@ -228,7 +227,7 @@ view model =
                 ]
             ]
         , H.div
-            [ Attr.class "p-10"
+            [ Attr.class "p-10 border-l"
             ]
             [ viewYear (model.year |> String.toInt |> Maybe.withDefault 2021) model.publicHolidays (List.concat model.longWeekends) ]
         ]
