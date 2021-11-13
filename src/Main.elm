@@ -224,6 +224,8 @@ view model =
                     , viewWeekendSelector model.weekendDays
                     ]
                 , H.div [] [ viewLegend ]
+                , H.div []
+                    [ H.a [ Attr.href "/about.html" ] [ H.text "About" ] ]
                 ]
             ]
         , H.div

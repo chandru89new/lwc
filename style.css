@@ -2,3 +2,8 @@
   opacity: 0.5;
   cursor: pointer;
 }
+
+a {
+  cursor: pointer;
+  text-decoration: underline;
+}
