@@ -63,6 +63,10 @@ type Msg
     | CMsg C.Msg
 
 
+
+-- update
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -160,6 +164,142 @@ update msg model =
                                 }
 
 
+
+-- subscriptions
+
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    Sub.none
+
+
+
+-- constants
+
+
+months =
+    [ Time.Jan
+    , Time.Feb
+    , Time.Mar
+    , Time.Apr
+    , Time.May
+    , Time.Jun
+    , Time.Jul
+    , Time.Aug
+    , Time.Sep
+    , Time.Oct
+    , Time.Nov
+    , Time.Dec
+    ]
+
+
+weekdays =
+    [ Time.Mon
+    , Time.Tue
+    , Time.Wed
+    , Time.Thu
+    , Time.Fri
+    , Time.Sat
+    , Time.Sun
+    ]
+
+
+
+-- ports
+
+
+port saveToStorage : String -> Cmd msg
+
+
+
+-- views
+
+
+viewWeekendSelector : List Time.Weekday -> H.Html Msg
+viewWeekendSelector weekends =
+    let
+        renderCheckbox : List Time.Weekday -> Time.Weekday -> H.Html Msg
+        renderCheckbox selectedWeekends weekday =
+            H.span [ Attr.class "inline-block mr-3" ]
+                [ H.input
+                    [ Attr.type_ "checkbox"
+                    , Attr.id ("checkbox-" ++ C.weekdayToSingleCharacter weekday)
+                    , Attr.checked (List.member weekday selectedWeekends)
+                    , Ev.onCheck (ToggleWeekendDays weekday)
+                    ]
+                    []
+                , H.label
+                    [ Attr.class "ml-1"
+                    , Attr.for ("checkbox-" ++ C.weekdayToSingleCharacter weekday)
+                    ]
+                    [ H.text <| C.weekdayToSingleCharacter weekday ]
+                ]
+    in
+    H.div []
+        (List.map
+            (renderCheckbox weekends)
+            weekdays
+        )
+
+
+viewWeekStartSelector : Time.Weekday -> H.Html Msg
+viewWeekStartSelector selectedWeekday =
+    let
+        option weekday =
+            H.option
+                [ Attr.selected (weekday == selectedWeekday)
+                , Attr.value (C.weekdayToTripleCharacterString weekday)
+                , Ev.onClick <| UpdateStartOfWeek weekday
+                ]
+                [ H.text (C.weekdayToTripleCharacterString weekday) ]
+    in
+    H.div []
+        [ H.select []
+            (List.map option weekdays)
+        ]
+
+
+viewLegend : H.Html Msg
+viewLegend =
+    H.div []
+        [ H.div [ Attr.class "text-sm mb-3" ] [ H.text "Legend" ]
+        , H.div [ Attr.class "flex items-center" ]
+            [ H.span
+                (List.map (\( a, b ) -> Attr.style a b) [ ( "width", "16px" ), ( "height", "16px" ) ]
+                    ++ [ Attr.class "bg-green-200 inline-block"
+                       ]
+                )
+                []
+            , H.span [ Attr.class "ml-2 text-xs" ] [ H.text "Potential long leave" ]
+            ]
+        , H.div [ Attr.class "mt-2 flex items-center" ]
+            [ H.span
+                (List.map (\( a, b ) -> Attr.style a b) [ ( "width", "16px" ), ( "height", "16px" ) ]
+                    ++ [ Attr.class "border border-green-500 inline-block"
+                       ]
+                )
+                []
+            , H.span [ Attr.class "ml-2 text-xs" ] [ H.text "Day marked as public holiday" ]
+            ]
+        ]
+
+
+viewYear : Int -> List C.PublicHoliday -> List C.HighlightDate -> Time.Weekday -> H.Html Msg
+viewYear year phs lws startOfWeek =
+    H.div
+        [ Attr.class "calendar"
+        , Attr.style "display" "grid"
+        , Attr.style "grid-auto-flow" "row"
+        , Attr.style "grid-template-columns" "repeat(4, 1fr)"
+        , Attr.style "grid-template-rows" "repeat(3, auto)"
+        , Attr.style "grid-gap" "3rem"
+        ]
+        (List.map
+            (\month -> C.viewMonth phs lws month startOfWeek year |> H.map CMsg)
+            months
+        )
+
+
 view : Model -> H.Html Msg
 view model =
     H.div
@@ -252,131 +392,15 @@ viewPotentialWeekend list =
         ]
 
 
+
+-- utils
+
+
 toString : CD.CalendarDate -> String
 toString a =
     Date.toIsoString a.date
 
 
-subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.none
-
-
-viewYear : Int -> List C.PublicHoliday -> List C.HighlightDate -> Time.Weekday -> H.Html Msg
-viewYear year phs lws startOfWeek =
-    H.div
-        [ Attr.class "calendar"
-        , Attr.style "display" "grid"
-        , Attr.style "grid-auto-flow" "row"
-        , Attr.style "grid-template-columns" "repeat(4, 1fr)"
-        , Attr.style "grid-template-rows" "repeat(3, auto)"
-        , Attr.style "grid-gap" "3rem"
-        ]
-        (List.map
-            (\month -> C.viewMonth phs lws month startOfWeek year |> H.map CMsg)
-            months
-        )
-
-
-months =
-    [ Time.Jan
-    , Time.Feb
-    , Time.Mar
-    , Time.Apr
-    , Time.May
-    , Time.Jun
-    , Time.Jul
-    , Time.Aug
-    , Time.Sep
-    , Time.Oct
-    , Time.Nov
-    , Time.Dec
-    ]
-
-
-viewLegend : H.Html Msg
-viewLegend =
-    H.div []
-        [ H.div [ Attr.class "text-sm mb-3" ] [ H.text "Legend" ]
-        , H.div [ Attr.class "flex items-center" ]
-            [ H.span
-                (List.map (\( a, b ) -> Attr.style a b) [ ( "width", "16px" ), ( "height", "16px" ) ]
-                    ++ [ Attr.class "bg-green-200 inline-block"
-                       ]
-                )
-                []
-            , H.span [ Attr.class "ml-2 text-xs" ] [ H.text "Potential long leave" ]
-            ]
-        , H.div [ Attr.class "mt-2 flex items-center" ]
-            [ H.span
-                (List.map (\( a, b ) -> Attr.style a b) [ ( "width", "16px" ), ( "height", "16px" ) ]
-                    ++ [ Attr.class "border border-green-500 inline-block"
-                       ]
-                )
-                []
-            , H.span [ Attr.class "ml-2 text-xs" ] [ H.text "Day marked as public holiday" ]
-            ]
-        ]
-
-
-port saveToStorage : String -> Cmd msg
-
-
 changeYear : Int -> Date.Date -> Date.Date
 changeYear year date =
     Date.fromCalendarDate year (Date.month date) (Date.day date)
-
-
-weekdays =
-    [ Time.Mon
-    , Time.Tue
-    , Time.Wed
-    , Time.Thu
-    , Time.Fri
-    , Time.Sat
-    , Time.Sun
-    ]
-
-
-viewWeekendSelector : List Time.Weekday -> H.Html Msg
-viewWeekendSelector weekends =
-    let
-        renderCheckbox : List Time.Weekday -> Time.Weekday -> H.Html Msg
-        renderCheckbox selectedWeekends weekday =
-            H.span [ Attr.class "inline-block mr-3" ]
-                [ H.input
-                    [ Attr.type_ "checkbox"
-                    , Attr.id ("checkbox-" ++ C.weekdayToSingleCharacter weekday)
-                    , Attr.checked (List.member weekday selectedWeekends)
-                    , Ev.onCheck (ToggleWeekendDays weekday)
-                    ]
-                    []
-                , H.label
-                    [ Attr.class "ml-1"
-                    , Attr.for ("checkbox-" ++ C.weekdayToSingleCharacter weekday)
-                    ]
-                    [ H.text <| C.weekdayToSingleCharacter weekday ]
-                ]
-    in
-    H.div []
-        (List.map
-            (renderCheckbox weekends)
-            weekdays
-        )
-
-
-viewWeekStartSelector : Time.Weekday -> H.Html Msg
-viewWeekStartSelector selectedWeekday =
-    let
-        option weekday =
-            H.option
-                [ Attr.selected (weekday == selectedWeekday)
-                , Attr.value (C.weekdayToTripleCharacterString weekday)
-                , Ev.onClick <| UpdateStartOfWeek weekday
-                ]
-                [ H.text (C.weekdayToTripleCharacterString weekday) ]
-    in
-    H.div []
-        [ H.select []
-            (List.map option weekdays)
-        ]
