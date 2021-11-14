@@ -28,6 +28,7 @@ type alias Model =
     , longWeekends : List (List Date.Date)
     , numberOfForcedLeaves : Int
     , showNonWeekendsToo : Bool
+    , startOfWeek : Time.Weekday
     }
 
 
@@ -45,6 +46,7 @@ init { year, initPublicHolidays } =
         []
         2
         True
+        Time.Sun
     , Task.perform (\_ -> GenerateLongWeekends) (Task.succeed 1)
     )
 
@@ -57,6 +59,7 @@ type Msg
     | SaveHolidays
     | ToggleNonWeekends Bool
     | ToggleWeekendDays Time.Weekday Bool
+    | UpdateStartOfWeek Time.Weekday
     | CMsg C.Msg
 
 
@@ -131,6 +134,9 @@ update msg model =
                         List.filter ((/=) weekday) model.weekendDays
             in
             update GenerateLongWeekends { model | weekendDays = newWeekendDays }
+
+        UpdateStartOfWeek startOfWeek ->
+            ( { model | startOfWeek = startOfWeek }, Cmd.none )
 
         CMsg cmsg ->
             case cmsg of
@@ -223,6 +229,10 @@ view model =
                         [ H.text "Weekends" ]
                     , viewWeekendSelector model.weekendDays
                     ]
+                , H.div []
+                    [ H.div [] [ H.text "Week starts on" ]
+                    , viewWeekStartSelector model.startOfWeek
+                    ]
                 , H.div [] [ viewLegend ]
                 , H.div []
                     [ H.a [ Attr.href "/about.html" ] [ H.text "About" ] ]
@@ -231,7 +241,7 @@ view model =
         , H.div
             [ Attr.class "p-10 border-l"
             ]
-            [ viewYear (model.year |> String.toInt |> Maybe.withDefault 2021) model.publicHolidays (List.concat model.longWeekends) ]
+            [ viewYear (model.year |> String.toInt |> Maybe.withDefault 2021) model.publicHolidays (List.concat model.longWeekends) model.startOfWeek ]
         ]
 
 
@@ -252,8 +262,8 @@ subscriptions _ =
     Sub.none
 
 
-viewYear : Int -> List C.PublicHoliday -> List C.HighlightDate -> H.Html Msg
-viewYear year phs lws =
+viewYear : Int -> List C.PublicHoliday -> List C.HighlightDate -> Time.Weekday -> H.Html Msg
+viewYear year phs lws startOfWeek =
     H.div
         [ Attr.class "calendar"
         , Attr.style "display" "grid"
@@ -263,7 +273,7 @@ viewYear year phs lws =
         , Attr.style "grid-gap" "3rem"
         ]
         (List.map
-            (\month -> C.viewMonth phs lws month Time.Sun year |> H.map CMsg)
+            (\month -> C.viewMonth phs lws month startOfWeek year |> H.map CMsg)
             months
         )
 
@@ -317,19 +327,20 @@ changeYear year date =
     Date.fromCalendarDate year (Date.month date) (Date.day date)
 
 
+weekdays =
+    [ Time.Mon
+    , Time.Tue
+    , Time.Wed
+    , Time.Thu
+    , Time.Fri
+    , Time.Sat
+    , Time.Sun
+    ]
+
+
 viewWeekendSelector : List Time.Weekday -> H.Html Msg
 viewWeekendSelector weekends =
     let
-        weekdays =
-            [ Time.Mon
-            , Time.Tue
-            , Time.Wed
-            , Time.Thu
-            , Time.Fri
-            , Time.Sat
-            , Time.Sun
-            ]
-
         renderCheckbox : List Time.Weekday -> Time.Weekday -> H.Html Msg
         renderCheckbox selectedWeekends weekday =
             H.span [ Attr.class "inline-block mr-3" ]
@@ -352,3 +363,20 @@ viewWeekendSelector weekends =
             (renderCheckbox weekends)
             weekdays
         )
+
+
+viewWeekStartSelector : Time.Weekday -> H.Html Msg
+viewWeekStartSelector selectedWeekday =
+    let
+        option weekday =
+            H.option
+                [ Attr.selected (weekday == selectedWeekday)
+                , Attr.value (C.weekdayToTripleCharacterString weekday)
+                , Ev.onClick <| UpdateStartOfWeek weekday
+                ]
+                [ H.text (C.weekdayToTripleCharacterString weekday) ]
+    in
+    H.div []
+        [ H.select []
+            (List.map option weekdays)
+        ]

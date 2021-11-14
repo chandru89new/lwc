@@ -284,3 +284,28 @@ weekdayToSingleCharacter weekday =
 
         Time.Sun ->
             "S"
+
+
+weekdayToTripleCharacterString : Time.Weekday -> String
+weekdayToTripleCharacterString weekday =
+    case weekday of
+        Time.Mon ->
+            "Mon"
+
+        Time.Tue ->
+            "Tue"
+
+        Time.Wed ->
+            "Wed"
+
+        Time.Thu ->
+            "Thu"
+
+        Time.Fri ->
+            "Fri"
+
+        Time.Sat ->
+            "Sat"
+
+        Time.Sun ->
+            "Sun"
