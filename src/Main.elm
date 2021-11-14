@@ -318,11 +318,11 @@ view model =
                 , H.div []
                     [ H.div
                         []
-                        [ H.text "1. Click on a date to mark it as a public holiday"
+                        [ H.text "Click on a date to mark (or remove) it as a public holiday. By default, it shows some public holidays for India."
                         ]
                     ]
                 , H.div []
-                    [ H.div [ Attr.class "mb-1" ] [ H.text "2. Select year" ]
+                    [ H.div [ Attr.class "mb-1" ] [ H.text "Year:" ]
                     , H.input
                         [ Attr.class "border p-1 rounded"
                         , Ev.onInput UpdateYear
@@ -336,7 +336,7 @@ view model =
                     [ H.div
                         [ Attr.class "mb-1"
                         ]
-                        [ H.text "3. Number of time-offs you are willing to take*" ]
+                        [ H.text "Number of time-offs you are willing to take*" ]
                     , H.input
                         [ Attr.type_ "number"
                         , Attr.class "border p-1 rounded"
