@@ -2,5 +2,4 @@
 
 echo "Init-ing the project"
 yarn
-sudo chmod +x ./watcher && sudo chmod +x ./build 
 ./build

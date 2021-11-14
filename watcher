@@ -2,8 +2,7 @@
 
 
 ### Set initial time of file
-echo "Okay, I've Started the watcher. You can now start making edits to the files in /styles and /src folder and they will be automatically built."
-yarn watch-elm
+echo "Okay, I've Started the watcher. You can now start making edits to the files in /src folder and they will be automatically built."
 LTIME=`stat src/*`
 while true
 do
