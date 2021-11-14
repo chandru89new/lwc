@@ -5,13 +5,6 @@ import List.Extra as List
 import Time
 
 
-type alias CalendarDate =
-    { date : Date.Date
-    , isHoliday : Bool
-    , isWeekend : Bool
-    }
-
-
 isHoliday : List Date.Date -> List Time.Weekday -> Date.Date -> Bool
 isHoliday phs weekends date =
     List.any ((==) date) phs || List.any ((==) (Date.weekday date)) weekends

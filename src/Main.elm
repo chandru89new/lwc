@@ -385,20 +385,8 @@ view model =
         ]
 
 
-viewPotentialWeekend : List CD.CalendarDate -> H.Html Msg
-viewPotentialWeekend list =
-    H.div []
-        [ H.text <| String.join ", " (List.map toString list)
-        ]
-
-
 
 -- utils
-
-
-toString : CD.CalendarDate -> String
-toString a =
-    Date.toIsoString a.date
 
 
 changeYear : Int -> Date.Date -> Date.Date
