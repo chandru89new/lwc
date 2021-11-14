@@ -1,15 +1,19 @@
 #!/bin/bash
 
-### Set initial time of file
-LTIME=`stat src/*`
 
-while true    
+### Set initial time of file
+echo "Okay, I've Started the watcher. You can now start making edits to the files in /styles and /src folder and they will be automatically built."
+yarn watch-elm
+LTIME=`stat src/*`
+while true
 do
-   ATIME=`stat src/*` 
-   if [[ "$ATIME" != "$LTIME" ]]
-   then    
-       elm make src/Main.elm --output main.js
-       LTIME=$ATIME
-   fi
-   sleep 3 
+    ATIME=`stat src/*` 
+    if [[ "$ATIME" != "$LTIME" ]]
+    then
+        echo "Changes detected. Building..."
+        yarn watch-elm
+        echo "Ready."
+        LTIME=$ATIME
+    fi
+    sleep 3 
 done

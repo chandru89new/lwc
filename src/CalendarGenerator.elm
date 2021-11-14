@@ -140,7 +140,7 @@ viewDate phs lwds maybeDate =
     in
     H.span
         (dateBoxStyle
-            ++ [ Attr.class "date border border-transparent"
+            ++ [ Attr.class "date border border-transparent cursor-pointer"
                , Attr.class
                     (if isPh then
                         "border border-green-500"
@@ -199,7 +199,7 @@ weekDivStyle =
 
 
 dateBoxStyle =
-    [ Attr.class "date-box inline-flex items-center justify-center text-sm p-1"
+    [ Attr.class "date-box inline-flex items-center justify-center text-sm p-1 "
 
     -- , Attr.style "height" "32px"
     ]

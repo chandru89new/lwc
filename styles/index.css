@@ -1,0 +1,12 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+.date:hover {
+  opacity: 0.5;
+}
+
+a {
+  @apply cursor-pointer;
+  text-decoration: underline;
+}

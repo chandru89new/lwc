@@ -1,0 +1,5 @@
+#!/bin/bash
+
+echo "Init-ing the project"
+yarn
+./build

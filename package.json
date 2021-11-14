@@ -1,0 +1,18 @@
+{
+  "dependencies": {
+    "autoprefixer": "^10.4.0",
+    "cssnano": "^5.0.10",
+    "postcss": "^8.3.11",
+    "postcss-cli": "^9.0.2",
+    "postcss-import": "^14.0.2",
+    "tailwindcss": "^2.2.19"
+  },
+  "scripts": {
+    "build-css": "postcss styles/ -o style.css",
+    "watch-css": "postcss styles/ -o style.css -w",
+    "watch-elm": "elm make src/Main.elm --output main.js",
+    "build-elm": "elm make src/Main.elm --optimize --output main.js",
+    "build-project": "yarn build-css && yarn build-elm && uglifyjs main.js --compress 'pure_funcs=[F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9],pure_getters,keep_fargs=false,unsafe_comps,unsafe' | uglifyjs --mangle --output main.js"
+  },
+  "license": ""
+}
