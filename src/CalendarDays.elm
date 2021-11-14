@@ -90,9 +90,9 @@ getLeaveRangesFromDate publicHolidays weekend_ date int =
 
 
 getItemWithMaxLength : List (List a) -> List a
-getItemWithMaxLength list =
+getItemWithMaxLength =
     Maybe.withDefault []
-        (List.maximumWith
+        << List.maximumWith
             (\a b ->
                 if List.length a >= List.length b then
                     GT
@@ -100,8 +100,6 @@ getItemWithMaxLength list =
                 else
                     LT
             )
-            list
-        )
 
 
 weekends_ : List Time.Weekday
