@@ -309,3 +309,31 @@ weekdayToTripleCharacterString weekday =
 
         Time.Sun ->
             "Sun"
+
+
+stringToWeekday : String -> Time.Weekday
+stringToWeekday weekday =
+    case weekday of
+        "Mon" ->
+            Time.Mon
+
+        "Tue" ->
+            Time.Tue
+
+        "Wed" ->
+            Time.Wed
+
+        "Thu" ->
+            Time.Thu
+
+        "Fri" ->
+            Time.Fri
+
+        "Sat" ->
+            Time.Sat
+
+        "Sun" ->
+            Time.Sun
+
+        _ ->
+            Time.Sun

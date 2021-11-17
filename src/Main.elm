@@ -32,8 +32,15 @@ type alias Model =
     }
 
 
-init : { year : Int, initPublicHolidays : List String } -> ( Model, Cmd Msg )
-init { year, initPublicHolidays } =
+init :
+    { year : Int
+    , initPublicHolidays : List String
+    , numberOfForcedLeaves : Int
+    , startOfWeek : String
+    , weekendDays : List String
+    }
+    -> ( Model, Cmd Msg )
+init { year, initPublicHolidays, numberOfForcedLeaves, startOfWeek, weekendDays } =
     ( Model
         (String.fromInt year)
         (List.map (changeYear year)
@@ -42,11 +49,13 @@ init { year, initPublicHolidays } =
                 initPublicHolidays
             )
         )
-        CD.weekends_
+        (List.map C.stringToWeekday weekendDays)
         []
-        2
+        numberOfForcedLeaves
         True
-        Time.Sun
+        (C.stringToWeekday
+            startOfWeek
+        )
     , Task.perform (\_ -> GenerateLongWeekends) (Task.succeed 1)
     )
 
@@ -56,7 +65,6 @@ type Msg
     | GenerateLongWeekends
     | UpdateForcedLeaves Int
     | UpdateYear String
-    | SaveHolidays
     | ToggleNonWeekends Bool
     | ToggleWeekendDays Time.Weekday Bool
     | UpdateStartOfWeek Time.Weekday
@@ -118,13 +126,11 @@ update msg model =
                 hasWeekendsInIt list =
                     List.any (\date -> List.any (\wd -> wd == Date.weekday date) model.weekendDays) list
             in
-            ( { model | longWeekends = lwdFilteredForWeekends }, Cmd.none )
-
-        SaveHolidays ->
-            ( model
+            ( { model | longWeekends = lwdFilteredForWeekends }
             , Cmd.batch
-                [ saveToStorage (Encoder.encode 0 (Encoder.list Encoder.string (List.map Date.toIsoString model.publicHolidays)))
-                , Task.perform (\_ -> GenerateLongWeekends) (Task.succeed Nothing)
+                [ savePhToStorage (Encoder.encode 0 (Encoder.list Encoder.string (List.map Date.toIsoString model.publicHolidays)))
+                , saveNumberOfForcedLeavesToStorage (Encoder.encode 0 (Encoder.int model.numberOfForcedLeaves))
+                , saveWeekendDaysToStorage (Encoder.encode 0 <| Encoder.list Encoder.string (List.map C.weekdayToTripleCharacterString model.weekendDays))
                 ]
             )
 
@@ -140,7 +146,9 @@ update msg model =
             update GenerateLongWeekends { model | weekendDays = newWeekendDays }
 
         UpdateStartOfWeek startOfWeek ->
-            ( { model | startOfWeek = startOfWeek }, Cmd.none )
+            ( { model | startOfWeek = startOfWeek }
+            , saveStartOfWeekToStorage (Encoder.encode 0 <| Encoder.string <| C.weekdayToTripleCharacterString startOfWeek)
+            )
 
         CMsg cmsg ->
             case cmsg of
@@ -158,7 +166,7 @@ update msg model =
                                     else
                                         d :: model.publicHolidays
                             in
-                            update SaveHolidays
+                            update GenerateLongWeekends
                                 { model
                                     | publicHolidays = newPhList
                                 }
@@ -208,7 +216,16 @@ weekdays =
 -- ports
 
 
-port saveToStorage : String -> Cmd msg
+port savePhToStorage : String -> Cmd msg
+
+
+port saveNumberOfForcedLeavesToStorage : String -> Cmd msg
+
+
+port saveWeekendDaysToStorage : String -> Cmd msg
+
+
+port saveStartOfWeekToStorage : String -> Cmd msg
 
 
 
