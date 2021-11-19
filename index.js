@@ -7,11 +7,11 @@ const storageKeys = {
 const saveToStorage = (key) => val => {
   return localStorage.setItem(key, val)
 }
-const getItem = (key) => {
+const getItemWithDefault = defaultValue => key => {
   if (localStorage.getItem(key)) {
     return JSON.parse(localStorage.getItem(key))
   }
-  return null
+  return defaultValue
 }
 const defaultPH = [
   "2021-01-26",
@@ -23,10 +23,10 @@ const app = Elm.Main.init({
   node: document.getElementById('app'),
   flags: {
     year: new Date().getFullYear(),
-    initPublicHolidays: getItem(storageKeys.publicHolidays) || defaultPH,
-    numberOfForcedLeaves: getItem(storageKeys.numberOfForcedLeaves),
-    weekendDays: getItem(storageKeys.weekends),
-    startOfWeek: getItem(storageKeys.startOfWeek)
+    initPublicHolidays: getItemWithDefault(defaultPH)(storageKeys.publicHolidays),
+    numberOfForcedLeaves: getItemWithDefault(1)(storageKeys.numberOfForcedLeaves),
+    weekendDays: getItemWithDefault(["Sun", "Sat"])(storageKeys.weekends),
+    startOfWeek: getItemWithDefault("Sun")(storageKeys.startOfWeek)
   }
 });
 app.ports.savePhToStorage.subscribe(val => saveToStorage(storageKeys.publicHolidays)(val))
