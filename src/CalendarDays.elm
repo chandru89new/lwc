@@ -84,7 +84,7 @@ getLeaveRangesFromDate publicHolidays weekend_ date int =
                 result
 
             else
-                result ++ (sortedUnique ( backwards, forwards ) :: recGetLeaveRangeFromDate result date_ ( backwards - 1, forwards + 1 ))
+                recGetLeaveRangeFromDate (sortedUnique ( backwards, forwards ) :: result) date_ ( backwards - 1, forwards + 1 )
     in
     recGetLeaveRangeFromDate [] date ( int, 0 )
 
