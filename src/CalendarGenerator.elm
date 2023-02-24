@@ -100,7 +100,7 @@ viewMonth daysData month startOfWeek year =
             generateMonthList month year startOfWeek
     in
     H.div
-        [ Attr.class "mb-5"
+        [ Attr.class ""
         ]
         ([ viewMonthHeader month year
          , viewWeekHeader startOfWeek
@@ -207,7 +207,7 @@ viewWeekHeader startOfWeek =
 
 
 weekDivStyle =
-    [ Attr.class "week"
+    [ Attr.class "week border-b"
     , Attr.style "display" "grid"
     , Attr.style "grid-auto-flow" "column"
     , Attr.style "grid-template-columns" "repeat(7, 1fr)"

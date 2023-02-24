@@ -8495,7 +8495,7 @@ var $author$project$CalendarGenerator$viewDate = F2(
 	});
 var $author$project$CalendarGenerator$weekDivStyle = _List_fromArray(
 	[
-		$elm$html$Html$Attributes$class('week'),
+		$elm$html$Html$Attributes$class('week border-b'),
 		A2($elm$html$Html$Attributes$style, 'display', 'grid'),
 		A2($elm$html$Html$Attributes$style, 'grid-auto-flow', 'column'),
 		A2($elm$html$Html$Attributes$style, 'grid-template-columns', 'repeat(7, 1fr)')
@@ -8549,7 +8549,7 @@ var $author$project$CalendarGenerator$viewMonth = F4(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('mb-5')
+					$elm$html$Html$Attributes$class('')
 				]),
 			_Utils_ap(
 				_List_fromArray(
