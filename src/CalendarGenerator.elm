@@ -93,8 +93,8 @@ generateMonthList month year startOfWeek =
     result
 
 
-viewMonth : List PublicHoliday -> List HighlightDate -> Time.Month -> Time.Weekday -> Int -> H.Html Msg
-viewMonth phs lws month startOfWeek year =
+viewMonth : DaysData -> Time.Month -> Time.Weekday -> Int -> H.Html Msg
+viewMonth daysData month startOfWeek year =
     let
         listOfWeeks =
             generateMonthList month year startOfWeek
@@ -105,24 +105,30 @@ viewMonth phs lws month startOfWeek year =
         ([ viewMonthHeader month year
          , viewWeekHeader startOfWeek
          ]
-            ++ List.map (viewWeek phs lws) listOfWeeks
+            ++ List.map (viewWeek daysData) listOfWeeks
         )
 
 
-viewWeek : List PublicHoliday -> List HighlightDate -> List (Maybe Date.Date) -> H.Html Msg
-viewWeek phs lws week =
+viewWeek : DaysData -> List (Maybe Date.Date) -> H.Html Msg
+viewWeek daysData week =
     H.div weekDivStyle
         (List.map
             (viewDate
-                phs
-                lws
+                daysData
             )
             week
         )
 
 
-viewDate : List PublicHoliday -> List HighlightDate -> Maybe Date.Date -> H.Html Msg
-viewDate phs lwds maybeDate =
+type alias DaysData =
+    { phs : List PublicHoliday
+    , lwds : List HighlightDate
+    , weekends : List Time.Weekday
+    }
+
+
+viewDate : DaysData -> Maybe Date.Date -> H.Html Msg
+viewDate { phs, lwds, weekends } maybeDate =
     let
         dateAsString =
             case maybeDate of
@@ -137,24 +143,34 @@ viewDate phs lwds maybeDate =
 
         isLwDate =
             Maybe.withDefault False <| Maybe.map (\date -> List.any ((==) date) lwds) maybeDate
+
+        isWeekend =
+            Maybe.map Date.weekday maybeDate
+                |> Maybe.map (\weekday -> List.any ((==) weekday) weekends)
+                |> Maybe.withDefault False
+
+        isTimeOff =
+            isLwDate && not isPh && not isWeekend
+
+        className =
+            case ( isPh, isLwDate, isTimeOff ) of
+                ( True, _, _ ) ->
+                    "border border-green-500 bg-green-100"
+
+                ( _, _, True ) ->
+                    "bg-red-100"
+
+                ( _, True, _ ) ->
+                    "text-green-800 bg-green-100"
+
+                _ ->
+                    ""
     in
     H.span
         (dateBoxStyle
             ++ [ Attr.class "date border border-transparent cursor-pointer"
                , Attr.class
-                    (if isPh then
-                        "border border-green-500"
-
-                     else
-                        ""
-                    )
-               , Attr.class
-                    (if isLwDate then
-                        "text-green-800 bg-green-100"
-
-                     else
-                        ""
-                    )
+                    className
                , Ev.onClick
                     (ClickedDate maybeDate)
                ]

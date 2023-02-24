@@ -283,7 +283,7 @@ viewLegend =
         , H.div [ Attr.class "flex items-center" ]
             [ H.span
                 (List.map (\( a, b ) -> Attr.style a b) [ ( "width", "16px" ), ( "height", "16px" ) ]
-                    ++ [ Attr.class "bg-green-200 inline-block"
+                    ++ [ Attr.class "border border-green-200 bg-green-200 inline-block"
                        ]
                 )
                 []
@@ -298,11 +298,20 @@ viewLegend =
                 []
             , H.span [ Attr.class "ml-2 text-xs" ] [ H.text "Day marked as public holiday" ]
             ]
+        , H.div [ Attr.class "mt-2 flex items-center" ]
+            [ H.span
+                (List.map (\( a, b ) -> Attr.style a b) [ ( "width", "16px" ), ( "height", "16px" ) ]
+                    ++ [ Attr.class "border border-red-100 bg-red-100 inline-block"
+                       ]
+                )
+                []
+            , H.span [ Attr.class "ml-2 text-xs" ] [ H.text "Time-off days" ]
+            ]
         ]
 
 
-viewYear : Int -> List C.PublicHoliday -> List C.HighlightDate -> Time.Weekday -> H.Html Msg
-viewYear year phs lws startOfWeek =
+viewYear : Int -> C.DaysData -> Time.Weekday -> H.Html Msg
+viewYear year daysData startOfWeek =
     H.div
         [ Attr.class "calendar"
         , Attr.style "display" "grid"
@@ -312,7 +321,7 @@ viewYear year phs lws startOfWeek =
         , Attr.style "grid-gap" "3rem"
         ]
         (List.map
-            (\month -> C.viewMonth phs lws month startOfWeek year |> H.map CMsg)
+            (\month -> C.viewMonth daysData month startOfWeek year |> H.map CMsg)
             months
         )
 
@@ -398,7 +407,13 @@ view model =
         , H.div
             [ Attr.class "p-10 border-l"
             ]
-            [ viewYear (model.year |> String.toInt |> Maybe.withDefault 2021) model.publicHolidays (List.concat model.longWeekends) model.startOfWeek ]
+            [ viewYear (model.year |> String.toInt |> Maybe.withDefault 2021)
+                { phs = model.publicHolidays
+                , lwds = List.concat model.longWeekends
+                , weekends = model.weekendDays
+                }
+                model.startOfWeek
+            ]
         ]
 
 
