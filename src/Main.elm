@@ -8,6 +8,7 @@ import Html as H
 import Html.Attributes as Attr
 import Html.Events as Ev
 import Json.Encode as Encoder
+import List.Extra
 import Task
 import Time
 
@@ -126,7 +127,7 @@ update msg model =
                 hasWeekendsInIt list =
                     List.any (\date -> List.any (\wd -> wd == Date.weekday date) model.weekendDays) list
             in
-            ( { model | longWeekends = lwdFilteredForWeekends }
+            ( { model | longWeekends = List.Extra.unique lwdFilteredForWeekends }
             , Cmd.batch
                 [ savePhToStorage (Encoder.encode 0 (Encoder.list Encoder.string (List.map Date.toIsoString model.publicHolidays)))
                 , saveNumberOfForcedLeavesToStorage (Encoder.encode 0 (Encoder.int model.numberOfForcedLeaves))
@@ -276,8 +277,17 @@ viewWeekStartSelector selectedWeekday =
         ]
 
 
-viewLegend : H.Html Msg
-viewLegend =
+viewLegend : C.DaysData -> H.Html Msg
+viewLegend { phs, lwds, weekends } =
+    let
+        timeOffDays =
+            List.filter
+                (\date ->
+                    List.all ((/=) (Date.weekday date)) weekends
+                )
+                lwds
+                |> List.filter (\date -> List.all ((/=) date) phs)
+    in
     H.div []
         [ H.div [ Attr.class "text-sm mb-3" ] [ H.text "Legend" ]
         , H.div [ Attr.class "flex items-center" ]
@@ -287,7 +297,7 @@ viewLegend =
                        ]
                 )
                 []
-            , H.span [ Attr.class "ml-2 text-xs" ] [ H.text "Potential long leave" ]
+            , H.span [ Attr.class "ml-2 text-xs" ] [ H.text <| "Potential long leave (" ++ (List.length lwds |> String.fromInt) ++ ")" ]
             ]
         , H.div [ Attr.class "mt-2 flex items-center" ]
             [ H.span
@@ -296,7 +306,7 @@ viewLegend =
                        ]
                 )
                 []
-            , H.span [ Attr.class "ml-2 text-xs" ] [ H.text "Day marked as public holiday" ]
+            , H.span [ Attr.class "ml-2 text-xs" ] [ H.text <| "Day marked as public holiday (" ++ (List.length phs |> String.fromInt) ++ ")" ]
             ]
         , H.div [ Attr.class "mt-2 flex items-center" ]
             [ H.span
@@ -305,7 +315,7 @@ viewLegend =
                        ]
                 )
                 []
-            , H.span [ Attr.class "ml-2 text-xs" ] [ H.text "Time-off days" ]
+            , H.span [ Attr.class "ml-2 text-xs" ] [ H.text <| "Suggested time-off days (" ++ (List.length timeOffDays |> String.fromInt) ++ ")" ]
             ]
         ]
 
@@ -399,7 +409,7 @@ view model =
                     [ H.div [] [ H.text "Week starts on" ]
                     , viewWeekStartSelector model.startOfWeek
                     ]
-                , H.div [] [ viewLegend ]
+                , H.div [] [ viewLegend { phs = model.publicHolidays, lwds = List.concat model.longWeekends, weekends = model.weekendDays } ]
                 , H.div []
                     [ H.a [ Attr.href "/about.html" ] [ H.text "About" ] ]
                 ]

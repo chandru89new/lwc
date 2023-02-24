@@ -86,7 +86,7 @@ getLeaveRangesFromDate publicHolidays weekend_ date int =
             else
                 recGetLeaveRangeFromDate (sortedUnique ( backwards, forwards ) :: result) date_ ( backwards - 1, forwards + 1 )
     in
-    recGetLeaveRangeFromDate [] date ( int, 0 )
+    recGetLeaveRangeFromDate [] date ( int, 0 ) |> List.unique
 
 
 getItemWithMaxLength : List (List a) -> List a
